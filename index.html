@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+      content="Arthur Games — parkour, Target Blaster, Island Royale, Blockcraft, and more. Saves stay in your browser."
+  />
+  <meta name="theme-color" content="#0c0e14" />
+  <title>Arthur Games</title>
+  <link rel="prefetch" href="parkour.html" />
+  <link rel="prefetch" href="gun-game.html" />
+  <link rel="prefetch" href="rage-car.html" />
+  <link rel="prefetch" href="snack-catch.html" />
+  <link rel="prefetch" href="island-royale.html" />
+  <link rel="prefetch" href="minecraft.html" />
+  <link rel="prefetch" href="depth-strike.html" />
+  <link rel="prefetch" href="glitch-market.html" />
+  <link rel="prefetch" href="soundboard-brawler.html" />
+  <link rel="prefetch" href="typo-spellcaster.html" />
+  <link rel="prefetch" href="bloons-td6.html" />
+  <style>
+    :root {
+      --bg: #0c0e14;
+      --panel: #151a26;
+      --text: #e8eaef;
+      --muted: #8a96ac;
+      --accent: #7ab8ff;
+      --accent2: #c8a8ff;
+      --gun: #ffb070;
+      --bar-h: 52px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, "Segoe UI", sans-serif;
+    }
+
+    /* —— Home —— */
+    #view-home {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 48px;
+    }
+    body.shell-game-open #arthurLangBtn {
+      display: none !important;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      background: linear-gradient(135deg, #f0f4fc, var(--accent) 42%, var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .tag {
+      margin: 0 0 40px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 30rem;
+      line-height: 1.55;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 960px;
+    }
+    button.card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+      padding: 26px 22px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(165deg, #1e2638 0%, #141a28 100%);
+      box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    button.card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(120, 170, 255, 0.45);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(100, 160, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card:active { transform: translateY(0); }
+    .game-card-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      isolation: isolate;
+    }
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: stretch;
+    }
+    .card-actions button {
+      flex: 1;
+      min-width: 72px;
+      padding: 8px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(0, 0, 0, 0.35);
+      color: #c8d4e8;
+      transition: filter 0.1s ease, border-color 0.12s ease;
+    }
+    .card-actions button:hover {
+      filter: brightness(1.12);
+      border-color: rgba(122, 184, 255, 0.45);
+    }
+    .card-actions button.card-act-tutorial {
+      border-color: rgba(200, 168, 255, 0.4);
+      color: #e8d8ff;
+    }
+    .card-actions button.card-act-endless {
+      border-color: rgba(255, 160, 100, 0.45);
+      color: #ffe8d0;
+    }
+    .card-actions button.card-act-twoplayer {
+      border-color: rgba(120, 200, 255, 0.5);
+      color: #c8e8ff;
+    }
+    .player-mode-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 0 22px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(120, 200, 255, 0.25);
+      background: rgba(20, 28, 44, 0.65);
+      max-width: 960px;
+      width: 100%;
+    }
+    .player-mode-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .player-mode-bar button.player-pick {
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      background: rgba(0, 0, 0, 0.35);
+      color: #b8c4d8;
+    }
+    .player-mode-bar button.player-pick.active {
+      border-color: rgba(120, 200, 255, 0.55);
+      background: rgba(60, 100, 160, 0.35);
+      color: #e8f4ff;
+    }
+    .player-mode-hint {
+      flex: 1 1 100%;
+      margin: 0;
+      font-size: 0.78rem;
+      color: #7a889c;
+      text-align: center;
+      line-height: 1.45;
+    }
+    button.card .two-p-badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      vertical-align: middle;
+      background: rgba(120, 200, 255, 0.22);
+      color: #9ed4ff;
+    }
+    button.card .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    button.card .title {
+      font-size: 1.32rem;
+      font-weight: 700;
+      margin: 0 0 10px;
+      color: #f2f5ff;
+    }
+    button.card .desc {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #9aa6bc;
+    }
+    button.card.gun .label { color: var(--gun); }
+    button.card.gun:hover {
+      border-color: rgba(255, 160, 90, 0.4);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 140, 80, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.fps .label { color: #6ab0ff; }
+    button.card.fps:hover {
+      border-color: rgba(80, 140, 255, 0.55);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(70, 120, 255, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .spotlights-heading {
+      margin: 36px 0 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #6a7890;
+      text-align: center;
+    }
+    .spotlights-lead {
+      margin: 0 0 18px;
+      font-size: 0.88rem;
+      color: #7a889c;
+      text-align: center;
+      max-width: 28rem;
+      line-height: 1.5;
+    }
+    .grid-spotlights {
+      max-width: 960px;
+    }
+    .spotlight {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      padding: 22px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: linear-gradient(165deg, #1c2434 0%, #131820 100%);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+      min-height: 118px;
+      cursor: default;
+      user-select: none;
+    }
+    .spotlight .role {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .spotlight .name {
+      font-size: 1.12rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: #f2f5ff;
+      line-height: 1.25;
+    }
+    .spotlight .tagline {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: #8b96aa;
+    }
+    .spotlight-epic .role { color: #d4a574; }
+    .spotlight-epic {
+      border-color: rgba(200, 140, 80, 0.22);
+      background: linear-gradient(165deg, #2a2218 0%, #141210 100%);
+    }
+    button.card.spotlight-cta .label {
+      color: #a8d4ff;
+    }
+    button.card.spotlight-cta:hover {
+      border-color: rgba(140, 200, 255, 0.45);
+    }
+    button.card.rage .label {
+      color: #ff8860;
+    }
+    button.card.snack .label { color: #ff9ad8; }
+    button.card.snack:hover {
+      border-color: rgba(255, 150, 210, 0.5);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 140, 200, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.gmarket .label { color: #6ae878; }
+    button.card.gmarket:hover {
+      border-color: rgba(106, 232, 120, 0.55);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(106, 232, 120, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.brawl .label { color: #ff8ed8; }
+    button.card.brawl:hover {
+      border-color: rgba(255, 120, 200, 0.5);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 100, 180, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.typo .label { color: #c8a8ff; }
+    button.card.typo:hover {
+      border-color: rgba(180, 140, 255, 0.5);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(160, 120, 255, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.bloons .label { color: #ffb040; }
+    button.card.bloons:hover {
+      border-color: rgba(255, 140, 60, 0.55);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 120, 40, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    button.card.rage:hover {
+      border-color: rgba(255, 120, 70, 0.5);
+      box-shadow:
+        0 22px 56px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 100, 60, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    footer {
+      margin-top: auto;
+      padding-top: 48px;
+      font-size: 0.8rem;
+      color: #5c6678;
+    }
+
+    /* —— Embedded game shell —— */
+    #view-play {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #0a0c12;
+    }
+    #view-play.open { display: flex; }
+
+    .play-bar {
+      flex: 0 0 var(--bar-h);
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px 0 10px;
+      padding-top: max(0px, env(safe-area-inset-top, 0px));
+      min-height: calc(var(--bar-h) + env(safe-area-inset-top, 0px));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, #161b28, #12151c);
+    }
+    .play-hint {
+      font-size: 0.68rem;
+      color: rgba(138, 150, 172, 0.85);
+      max-width: 12rem;
+      line-height: 1.25;
+      text-align: right;
+    }
+    .play-bar button {
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #c8d4f0;
+      cursor: pointer;
+      touch-action: manipulation;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(30, 38, 56, 0.95);
+    }
+    .play-bar button:hover {
+      color: #fff;
+      border-color: rgba(120, 170, 255, 0.45);
+    }
+    .play-bar .title {
+      flex: 1;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #game-frame {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border: 0;
+      display: block;
+      background: #000;
+    }
+    .frame-shell {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .frame-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #0a0d14 0%, #060810 100%);
+    }
+    .frame-loading.hidden {
+      display: none !important;
+    }
+    .frame-loading-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 24px;
+      text-align: center;
+      max-width: 22rem;
+    }
+    .frame-spinner {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 3px solid rgba(122, 184, 255, 0.22);
+      border-top-color: var(--accent);
+      animation: frameSpin 0.72s linear infinite;
+    }
+    @keyframes frameSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    #frame-loading-text {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div id="view-home" role="main">
+    <h1 data-i18n="hub.title">Arthur Games</h1>
+    <p class="tag" data-i18n="hub.tag">Saves and coins stay in your browser. Pick a game below — Back returns here without closing the tab. Each game has Play and Tutorial. Games with their own store also show Shop. Endless and 2 Player only appear where supported. Use Vault to trade earnings into Arthur Coins for the Arthur Shop.</p>
+
+    <div class="hub-shop-bar">
+      <span class="coins"><span data-i18n="hub.coins">Arthur Coins:</span> <strong id="hubCoinsEl">0</strong></span>
+      <button type="button" id="btnArthurBank" data-i18n="hub.vault">Vault</button>
+      <button type="button" id="btnArthurShop" data-i18n="hub.shop">Arthur Shop</button>
+      <button type="button" id="btnArthurProfile" data-i18n="hub.profile">Profile</button>
+    </div>
+
+    <div class="grid">
+      <button type="button" class="card" id="btn-parkour" data-src="parkour.html" data-label="Learn to parkour">
+        <span class="label">Platformer</span>
+        <span class="title">Learn to parkour</span>
+        <p class="desc">Campaign, shop, editor, chase wall, UFO, tax, wave, and the rest — full experience.</p>
+      </button>
+      <button type="button" class="card gun" id="btn-gun" data-src="gun-game.html" data-label="Target Blaster">
+        <span class="label">Arcade</span>
+        <span class="title">Target Blaster</span>
+        <p class="desc">WASD move, mouse aim, hold click to clear waves of targets.</p>
+      </button>
+      <button type="button" class="card fps" id="btn-fps" data-src="depth-strike.html" data-label="Depth Strike">
+        <span class="label">3D FPS</span>
+        <span class="title">Depth Strike</span>
+        <p class="desc">Rivals hub + walk-in weapon shop — buy every Rivals gun with Keys, then queue on pads.</p>
+      </button>
+      <button type="button" class="card fps" id="btn-island" data-src="island-royale.html" data-label="Island Royale">
+        <span class="label">3D Battle Royale</span>
+        <span class="title">Island Royale</span>
+        <p class="desc">Fortnite-style island — loot 20+ weapons, health &amp; shield, build walls, fight bot squads, survive the storm.</p>
+      </button>
+      <button type="button" class="card fps" id="btn-minecraft" data-src="minecraft.html" data-label="Blockcraft">
+        <span class="label">3D Sandbox</span>
+        <span class="title">Blockcraft</span>
+        <p class="desc">Minecraft-style voxels — explore infinite chunks, dig and place blocks, fly, and build with a hotbar.</p>
+      </button>
+      <button type="button" class="card rage" id="btn-rage" data-src="rage-car.html" data-label="Rage Car">
+        <span class="label">Racing</span>
+        <span class="title">Rage Car</span>
+        <p class="desc">Three-lane survival: dodge debris as speed and rage climb. A/D or arrows — tap lanes on touch.</p>
+      </button>
+      <button type="button" class="card snack" id="btn-snack" data-src="snack-catch.html" data-label="Snack Catch">
+        <span class="label">Arcade</span>
+        <span class="title">Snack Catch</span>
+        <p class="desc">Catch falling snacks in your basket — dodge broccoli and bombs. Combos, stars, and double-points power-ups!</p>
+      </button>
+      <button type="button" class="card gmarket" id="btn-gmarket" data-src="glitch-market.html" data-label="Glitch Market">
+        <span class="label">Trading sim</span>
+        <span class="title">Glitch Market</span>
+        <p class="desc">Five volatile commodity tickers on a fake desktop — news shocks prices in real time. Buy low, sell high, reinvest in Inside Info and HFT bots.</p>
+      </button>
+      <button type="button" class="card brawl" id="btn-brawl" data-src="soundboard-brawler.html" data-label="Soundboard Brawler">
+        <span class="label">Beat battle</span>
+        <span class="title">Soundboard Brawler</span>
+        <p class="desc">Paint a 16-step loop on kick, snare, hats, bass, and synth — preview it, then present to three judges who score your groove and unlock bigger venues.</p>
+      </button>
+      <button type="button" class="card typo" id="btn-typo" data-src="typo-spellcaster.html" data-label="The Typo Spellcaster">
+        <span class="label">Dungeon</span>
+        <span class="title">The Typo Spellcaster</span>
+        <p class="desc">Type words to cast — FIRE, ICE, HEAL. A typo like FIER backfires: hot mud, inventory blaze, heals on enemies. Enter to cast.</p>
+      </button>
+      <button type="button" class="card bloons" id="btn-bloons" data-src="bloons-td6.html" data-label="Bloons TD 6">
+        <span class="label">Tower defense</span>
+        <span class="title">Bloons TD 6</span>
+        <p class="desc">Home hub, Skill Tree, Trophy Store — 22 monkeys, categorized buy bar, and 50+ maps from Meadow to #Ouch.</p>
+      </button>
+    </div>
+
+    <h2 class="spotlights-heading" data-i18n="hub.spotlights">On the home screen</h2>
+    <p class="spotlights-lead" data-i18n="hub.spotLead">
+      Mood-board tiles: tone and craft we borrow from (not playable here). Your obby opens our parkour builder.
+    </p>
+    <div class="grid grid-spotlights">
+      <article class="spotlight spotlight-epic" aria-label="Inspiration: The Witcher 3">
+        <span class="role">The “Epic” centerpiece</span>
+        <span class="name">The Witcher 3</span>
+        <p class="tagline">Sweeping world, quest weight, and “one more contract” gravity — the big-stage bar we reach for.</p>
+      </article>
+      <button type="button" class="card spotlight-cta" id="btn-obby-custom" data-src="parkour.html" data-label="Your custom obby">
+        <span class="label">The “Personal” touch</span>
+        <span class="title">Your custom obby</span>
+        <p class="desc">Opens <strong>Learn to parkour</strong> — use <strong>Create</strong> in its menu to build and run your own course.</p>
+      </button>
+    </div>
+
+    <footer>Pick a game above — your progress and coins stay saved in this browser.</footer>
+  </div>
+
+  <div id="view-play" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Playing game">
+    <div class="play-bar">
+      <button type="button" id="btn-back" aria-label="Back to Arthur Games" data-i18n="hub.back">← Back</button>
+      <span class="title" id="play-title"></span>
+      <span class="play-hint" id="play-hint" hidden>
+        Tip: if keys do nothing, use the game’s dim overlay or click the canvas once.
+      </span>
+    </div>
+    <div class="frame-shell">
+      <div id="frame-loading" class="frame-loading hidden" aria-live="polite" aria-busy="false">
+        <div class="frame-loading-inner">
+          <span class="frame-spinner" aria-hidden="true"></span>
+          <span id="frame-loading-text" data-i18n="hub.loading">Loading game…</span>
+        </div>
+      </div>
+      <iframe
+        id="game-frame"
+        title="Game"
+        allow="fullscreen; gamepad; pointer-lock"
+        loading="eager"
+        tabindex="-1"
+      ></iframe>
+    </div>
+  </div>
+
+  <script src="arthur-shop.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="arthur-music.js"></script>
+  <script>
+    (function () {
+      var home = document.getElementById('view-home');
+      var play = document.getElementById('view-play');
+      var frame = document.getElementById('game-frame');
+      var titleEl = document.getElementById('play-title');
+      var btnBack = document.getElementById('btn-back');
+      var playHint = document.getElementById('play-hint');
+      var frameLoading = document.getElementById('frame-loading');
+      var frameLoadingText = document.getElementById('frame-loading-text');
+      var loadWarnTimer = null;
+
+      function setFrameLoading(show) {
+        if (!frameLoading) return;
+        if (show) {
+          frameLoading.hidden = false;
+          frameLoading.classList.remove('hidden');
+          frameLoading.setAttribute('aria-busy', 'true');
+          if (frameLoadingText) frameLoadingText.textContent = (window.ArthurI18n && ArthurI18n.tr) ? ArthurI18n.tr('hub.loading') : 'Loading game…';
+        } else {
+          frameLoading.classList.add('hidden');
+          frameLoading.hidden = true;
+          frameLoading.setAttribute('aria-busy', 'false');
+        }
+      }
+
+      function focusEmbeddedGame() {
+        try {
+          frame.focus({ preventScroll: true });
+        } catch (e1) {}
+        try {
+          if (frame.contentWindow) frame.contentWindow.focus();
+        } catch (e2) {}
+        try {
+          var doc = frame.contentDocument;
+          if (doc) {
+            var c = doc.getElementById('game');
+            if (c && c.focus) c.focus({ preventScroll: true });
+          }
+        } catch (e3) {}
+      }
+
+      var TWO_PLAYER_SRC = {
+        'gun-game.html': true,
+        'snack-catch.html': true,
+        'rage-car.html': true,
+      };
+
+      var ENDLESS_SRC = {
+        'parkour.html': true,
+        'gun-game.html': true,
+        'rage-car.html': true,
+        'snack-catch.html': true,
+        'depth-strike.html': true,
+        'soundboard-brawler.html': true,
+        'typo-spellcaster.html': true,
+      };
+
+      var SHOP_SRC = {
+        'parkour.html': true,
+        'gun-game.html': true,
+        'rage-car.html': true,
+        'glitch-market.html': true,
+      };
+
+      function resolveGameLabel(btnOrLabel) {
+        if (typeof btnOrLabel === 'string') {
+          if (window.ArthurI18n && ArthurI18n.getLang() === 'zh') {
+            var cards = document.querySelectorAll('button.card[data-label]');
+            for (var i = 0; i < cards.length; i++) {
+              if (cards[i].getAttribute('data-label') === btnOrLabel) {
+                var zh = cards[i].querySelector('.title');
+                if (zh && zh.textContent) return zh.textContent.trim();
+              }
+            }
+          }
+          return btnOrLabel;
+        }
+        var btn = btnOrLabel;
+        if (!btn) return '';
+        if (window.ArthurI18n && ArthurI18n.getLang() === 'zh') {
+          var title = btn.querySelector('.title');
+          if (title && title.textContent) return title.textContent.trim();
+        }
+        return btn.getAttribute('data-label') || '';
+      }
+
+      function openGame(src, label, opts) {
+        opts = opts || {};
+        var wantTwo = !!(opts.twoPlayer && TWO_PLAYER_SRC[src]);
+        if (opts.endless && !ENDLESS_SRC[src]) {
+          opts.endless = false;
+        }
+        var url = src;
+        var q = [];
+        if (opts.tutorial) {
+          q.push('tutorial=1');
+        } else if (opts.endless) {
+          q.push('mode=endless');
+        }
+        if (wantTwo) {
+          q.push('players=2');
+        }
+        if (opts.shop) {
+          q.push('shop=1');
+        }
+        if (q.length) {
+          url = src + (src.indexOf('?') >= 0 ? '&' : '?') + q.join('&');
+        }
+        if (loadWarnTimer) {
+          clearTimeout(loadWarnTimer);
+          loadWarnTimer = null;
+        }
+        setFrameLoading(true);
+        frame.onload = function () {
+          frame.onload = null;
+          if (loadWarnTimer) {
+            clearTimeout(loadWarnTimer);
+            loadWarnTimer = null;
+          }
+          setFrameLoading(false);
+          focusEmbeddedGame();
+          setTimeout(focusEmbeddedGame, 50);
+          setTimeout(focusEmbeddedGame, 200);
+        };
+        frame.src = url;
+        titleEl.textContent =
+          label +
+          (opts.tutorial ? ' · Tutorial'
+            : opts.endless ? ' · Endless'
+            : wantTwo ? ' · 2 players' : '');
+        if (playHint) playHint.hidden = false;
+        home.classList.add('hidden');
+        play.classList.add('open');
+        play.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('shell-game-open');
+        if (window.ArthurMusic) window.ArthurMusic.stop();
+        var hashFile = src.split('?')[0];
+        var playHash = '#play=' + encodeURIComponent(hashFile);
+        if (q.length) {
+          playHash += '?' + q.join('&');
+        }
+        if (window.location.hash !== playHash) {
+          history.pushState({ shell: 'play', src: hashFile }, '', playHash);
+        } else {
+          history.replaceState({ shell: 'play', src: hashFile }, '', playHash);
+        }
+        requestAnimationFrame(focusEmbeddedGame);
+        loadWarnTimer = setTimeout(function () {
+          loadWarnTimer = null;
+          if (!frameLoading || frameLoading.classList.contains('hidden')) return;
+          if (frameLoadingText) {
+            frameLoadingText.textContent =
+              'This is taking a while. If it never finishes, confirm the game .html files sit next to index.html (or try opening the file directly).';
+          }
+        }, 10000);
+      }
+
+      function closeGame() {
+        if (!play.classList.contains('open')) return;
+        if (loadWarnTimer) {
+          clearTimeout(loadWarnTimer);
+          loadWarnTimer = null;
+        }
+        frame.onload = null;
+        setFrameLoading(false);
+        play.classList.remove('open');
+        play.setAttribute('aria-hidden', 'true');
+        home.classList.remove('hidden');
+        frame.removeAttribute('src');
+        document.body.classList.remove('shell-game-open');
+        if (window.ArthurMusic) window.ArthurMusic.start('hub');
+        titleEl.textContent = '';
+        if (playHint) playHint.hidden = true;
+        if (window.location.hash.indexOf('#play=') === 0) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        try {
+          document.getElementById('btn-parkour').focus({ preventScroll: true });
+        } catch (e5) {}
+      }
+
+      function wireCard(id) {
+        var btn = document.getElementById(id);
+        if (!btn) return;
+        if (btn.dataset.wired === '1') return;
+        btn.dataset.wired = '1';
+        btn.addEventListener('click', function () {
+          openGame(btn.getAttribute('data-src'), resolveGameLabel(btn));
+        });
+      }
+
+      function enhanceGameCards() {
+        var ENHANCE_VER = '6';
+        var gameGrid = document.querySelector('#view-home .grid:not(.grid-spotlights)');
+        if (!gameGrid) return;
+
+        function makeActBtn(cls, act, text) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = cls;
+          b.setAttribute('data-act', act);
+          b.textContent = text;
+          return b;
+        }
+
+        var cards = gameGrid.querySelectorAll('button.card[data-src]');
+        for (var ci = 0; ci < cards.length; ci++) {
+          var card = cards[ci];
+          var src = card.getAttribute('data-src');
+          var label = card.getAttribute('data-label');
+          if (!src) continue;
+
+          var wrap = card.closest('.game-card-wrap');
+          if (!wrap) {
+            wrap = document.createElement('div');
+            wrap.className = 'game-card-wrap';
+            card.parentNode.insertBefore(wrap, card);
+            wrap.appendChild(card);
+          }
+
+          wrap.setAttribute('data-game-src', src);
+          wrap.setAttribute('data-game-label', label || src);
+          card.dataset.enhanced = ENHANCE_VER;
+
+          var oldActions = wrap.querySelector('.card-actions');
+          if (oldActions) oldActions.remove();
+
+          var actions = document.createElement('div');
+          actions.className = 'card-actions';
+          actions.appendChild(makeActBtn('card-act-play', 'play', 'Play'));
+          actions.appendChild(makeActBtn('card-act-tutorial', 'tutorial', 'Tutorial'));
+          if (ENDLESS_SRC[src]) {
+            actions.appendChild(makeActBtn('card-act-endless', 'endless', 'Endless'));
+          }
+          if (SHOP_SRC[src]) {
+            actions.appendChild(makeActBtn('card-act-shop', 'shop', 'Shop'));
+          }
+          if (TWO_PLAYER_SRC[src]) {
+            actions.appendChild(makeActBtn('card-act-twoplayer', 'twoplayer', '2 Player'));
+          }
+          wrap.appendChild(actions);
+          if (TWO_PLAYER_SRC[src]) {
+            var titleEl2 = card.querySelector('.title');
+            if (titleEl2 && !titleEl2.querySelector('.two-p-badge')) {
+              var badge = document.createElement('span');
+              badge.className = 'two-p-badge';
+              badge.textContent = '2P';
+              titleEl2.appendChild(badge);
+            }
+          }
+        }
+
+        var homeView = document.getElementById('view-home');
+        if (!homeView || homeView.dataset.gameClickWired === '1') return;
+        homeView.dataset.gameClickWired = '1';
+        homeView.addEventListener('click', function (e) {
+          var wrap = e.target.closest('.game-card-wrap');
+          if (!wrap || !homeView.contains(wrap)) return;
+
+          var gameSrc = wrap.getAttribute('data-game-src');
+          var gameLabel = wrap.getAttribute('data-game-label') || gameSrc;
+          if (!gameSrc) return;
+
+          var actBtn = e.target.closest('.card-actions button[data-act]');
+          if (actBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            var act = actBtn.getAttribute('data-act');
+            if (act === 'play') openGame(gameSrc, gameLabel);
+            else if (act === 'tutorial') openGame(gameSrc, gameLabel, { tutorial: true });
+            else if (act === 'endless') openGame(gameSrc, gameLabel, { endless: true });
+            else if (act === 'shop') {
+              openGame(gameSrc, gameLabel, { shop: true });
+            }
+            else if (act === 'twoplayer') openGame(gameSrc, gameLabel, { twoPlayer: true });
+            return;
+          }
+
+          if (e.target.closest('.card-actions')) return;
+          var card = e.target.closest('button.card[data-src]');
+          if (!card || !wrap.contains(card)) return;
+          openGame(gameSrc, gameLabel);
+        });
+      }
+      enhanceGameCards();
+
+      wireCard('btn-obby-custom');
+
+      if (btnBack) btnBack.addEventListener('click', closeGame);
+
+      play.addEventListener('keydown', function (ev) {
+        if (ev.code === 'Escape') {
+          ev.preventDefault();
+          closeGame();
+        }
+      });
+
+      window.addEventListener('popstate', function () {
+        if (!play.classList.contains('open')) return;
+        if (loadWarnTimer) {
+          clearTimeout(loadWarnTimer);
+          loadWarnTimer = null;
+        }
+        frame.onload = null;
+        setFrameLoading(false);
+        play.classList.remove('open');
+        play.setAttribute('aria-hidden', 'true');
+        home.classList.remove('hidden');
+        frame.removeAttribute('src');
+        document.body.classList.remove('shell-game-open');
+        if (window.ArthurMusic) window.ArthurMusic.start('hub');
+        titleEl.textContent = '';
+        if (playHint) playHint.hidden = true;
+      });
+
+      /* Deep link: index.html#play=parkour.html */
+      function tryHashLaunch() {
+        var h = window.location.hash;
+        if (h.indexOf('#play=') !== 0) return;
+        var raw = decodeURIComponent(h.slice(6));
+        var q = raw.indexOf('?');
+        var file = q >= 0 ? raw.slice(0, q) : raw;
+        var params = q >= 0 ? new URLSearchParams(raw.slice(q + 1)) : null;
+        var tut = params && (params.get('tutorial') === '1' || params.get('tutorial') === 'true');
+        var end = params && params.get('mode') === 'endless';
+        var shop = params && (params.get('shop') === '1' || params.get('shop') === 'true');
+        var two =
+          params && (params.get('players') === '2' || params.get('players') === 'two');
+        var launch = function (f, lbl) {
+          var opts = {};
+          if (tut) opts.tutorial = true;
+          else if (end) opts.endless = true;
+          else if (shop) opts.shop = true;
+          else if (two) opts.twoPlayer = true;
+          openGame(f, lbl, opts);
+        };
+        if (file === 'parkour.html') launch('parkour.html', 'Learn to parkour');
+        else if (file === 'gun-game.html') launch('gun-game.html', 'Target Blaster');
+        else if (file === 'depth-strike.html') launch('depth-strike.html', 'Depth Strike');
+        else if (file === 'island-royale.html') launch('island-royale.html', 'Island Royale');
+        else if (file === 'minecraft.html') launch('minecraft.html', 'Blockcraft');
+        else if (file === 'rage-car.html') launch('rage-car.html', 'Rage Car');
+        else if (file === 'snack-catch.html') launch('snack-catch.html', 'Snack Catch');
+        else if (file === 'glitch-market.html') launch('glitch-market.html', 'Glitch Market');
+        else if (file === 'soundboard-brawler.html') launch('soundboard-brawler.html', 'Soundboard Brawler');
+        else if (file === 'typo-spellcaster.html') launch('typo-spellcaster.html', 'The Typo Spellcaster');
+        else if (file === 'bloons-td6.html' || file === 'bloons-td.html') launch('bloons-td6.html', 'Bloons TD 6');
+        else {
+          var card = document.querySelector('button.card[data-src="' + file + '"]');
+          if (card) launch(file, card.getAttribute('data-label') || file);
+        }
+      }
+      tryHashLaunch();
+
+      function refreshHubCoins() {
+        var coinsEl = document.getElementById('hubCoinsEl');
+        if (coinsEl && window.ArthurShop) {
+          coinsEl.textContent = String(ArthurShop.getCoins());
+        }
+      }
+      refreshHubCoins();
+      if (window.ArthurShop) ArthurShop.onCoinsChange(refreshHubCoins);
+      var btnArthurBank = document.getElementById('btnArthurBank');
+      if (btnArthurBank) {
+        btnArthurBank.addEventListener('click', function () {
+          if (window.ArthurShop) ArthurShop.openBank();
+        });
+      }
+      var btnArthurShop = document.getElementById('btnArthurShop');
+      if (btnArthurShop) {
+        btnArthurShop.addEventListener('click', function () {
+          if (window.ArthurShop) ArthurShop.open();
+        });
+      }
+      var btnArthurProfile = document.getElementById('btnArthurProfile');
+      if (btnArthurProfile) {
+        btnArthurProfile.addEventListener('click', function () {
+          if (window.ArthurProfile) ArthurProfile.open();
+        });
+      }
+      /* Hide hub Profile while a game is open (home bar is already hidden; keep overlay close). */
+      function syncProfileHomeOnly() {
+        var onHome = home && !home.classList.contains('hidden');
+        if (btnArthurProfile) btnArthurProfile.style.display = onHome ? '' : 'none';
+        if (window.ArthurProfile && ArthurProfile.close && !onHome) ArthurProfile.close();
+      }
+      var _obsPlay = play;
+      if (_obsPlay && window.MutationObserver) {
+        new MutationObserver(syncProfileHomeOnly).observe(_obsPlay, { attributes: true, attributeFilter: ['class'] });
+      }
+      syncProfileHomeOnly();
+    })();
+  </script>
+  <script src="arthur-i18n.js"></script>
+</body>
+</html>
