@@ -1,0 +1,11 @@
+{
+  "name": "arthur-games",
+  "private": true,
+  "scripts": {
+    "start": "node depth-strike-server.js",
+    "lobby-server": "node depth-strike-server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

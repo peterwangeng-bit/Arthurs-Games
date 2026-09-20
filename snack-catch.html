@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snack Catch — Arthur Games</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0f1220;
+      color: #e8eaef;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px 20px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #fff8e8, #ff9a4a 45%, #ff5eb8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      margin: 0 0 18px;
+      font-size: 0.88rem;
+      color: #9aa6b8;
+      text-align: center;
+      max-width: 28rem;
+      line-height: 1.5;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    button.btn {
+      padding: 11px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 150, 200, 0.55);
+      background: linear-gradient(165deg, #3a2848 0%, #1a1428 100%);
+      color: #ffe8f8;
+      font-family: inherit;
+    }
+    button.btn:hover {
+      filter: brightness(1.1);
+      border-color: #ff9ad0;
+    }
+    .hud {
+      display: none;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      color: #aab8cc;
+    }
+    .hud.visible { display: flex; }
+    .hud strong { color: #ffb8e8; }
+    .wrap {
+      position: relative;
+      line-height: 0;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 140, 200, 0.15) inset;
+    }
+    #game {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #1a1030;
+      border-radius: 12px;
+      touch-action: none;
+    }
+    .frame-tap-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(12, 10, 24, 0.85);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 160, 220, 0.35);
+      color: #e8ecf4;
+      font-size: 1rem;
+      font-weight: 650;
+      text-align: center;
+      padding: 18px;
+      user-select: none;
+    }
+    .frame-tap-overlay.hidden { display: none !important; }
+    .frame-tap-overlay .small {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(200, 210, 230, 0.85);
+      max-width: 16rem;
+      line-height: 1.45;
+    }
+    #hubPanel { max-width: 36rem; text-align: center; }
+    #playShell { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 980px; }
+    #playShell.open { display: flex; }
+    .hint {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #6a7890;
+      text-align: center;
+      max-width: 28rem;
+      line-height: 1.45;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.78);
+      padding: 20px;
+    }
+    .overlay.hidden { display: none !important; }
+    .overlay-inner {
+      text-align: center;
+      max-width: 22rem;
+      line-height: 1.5;
+    }
+    .overlay-inner .big {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffb8f0;
+      margin: 0 0 10px;
+    }
+    .overlay-inner p { margin: 0 0 14px; color: #c8d0e0; }
+  </style>
+</head>
+<body>
+  <div id="hubPanel">
+    <h1>Snack Catch</h1>
+    <p class="sub">
+      Move the basket and catch yummy snacks! Dodge broccoli and bombs. Chain catches for combo points — golden stars are worth a ton.
+    </p>
+    <div class="btn-row">
+      <button type="button" class="btn" id="btnPlay">Play</button>
+    </div>
+    <p class="hint" id="bestHint"></p>
+  </div>
+
+  <div id="playShell">
+    <div class="hud" id="hud">
+      <span><span>Score</span> <strong id="scoreEl">0</strong></span>
+      <span><span>Combo</span> <strong id="comboEl">×1</strong></span>
+      <span><span>Lives</span> <strong id="livesEl">❤❤❤</strong></span>
+      <span><span>Best</span> <strong id="bestEl">0</strong></span>
+    </div>
+    <div class="wrap">
+      <canvas id="game" width="960" height="540" tabindex="0" aria-label="Snack Catch game"></canvas>
+      <div class="frame-tap-overlay" id="tapOverlay" role="button" tabindex="0" aria-label="Click to play">
+        <span>Click or tap to play</span>
+        <span class="small">A/D or ←/→ move · mouse follows · Esc back to menu</span>
+      </div>
+    </div>
+    <p class="hint">Catch 🍩 🍕 🍪 ⭐ · avoid 🥦 💣 · rainbow snack = double points!</p>
+  </div>
+
+  <div class="overlay hidden" id="gameOverOverlay" aria-hidden="true">
+    <div class="overlay-inner">
+      <p class="big" id="goTitle">Game over!</p>
+      <p id="goMsg"></p>
+      <button type="button" class="btn" id="btnRetry">Play again</button>
+      <button type="button" class="btn" id="btnMenu" style="margin-left:8px">Menu</button>
+    </div>
+  </div>
+
+  <script src="arthur-shop.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="arthur-modes.js"></script>
+  <script src="arthur-music.js"></script>
+  <script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const hubPanel = document.getElementById('hubPanel');
+  const playShell = document.getElementById('playShell');
+  const hud = document.getElementById('hud');
+  const tapOverlay = document.getElementById('tapOverlay');
+  const scoreEl = document.getElementById('scoreEl');
+  const comboEl = document.getElementById('comboEl');
+  const livesEl = document.getElementById('livesEl');
+  const bestEl = document.getElementById('bestEl');
+  const bestHint = document.getElementById('bestHint');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const goTitle = document.getElementById('goTitle');
+  const goMsg = document.getElementById('goMsg');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnRetry = document.getElementById('btnRetry');
+  const btnMenu = document.getElementById('btnMenu');
+
+  const LS_BEST = 'snackCatchBest';
+  let bestScore = parseInt(localStorage.getItem(LS_BEST) || '0', 10) || 0;
+  function syncBestUi() {
+    bestEl.textContent = String(bestScore);
+    var tr = window.ArthurI18n && ArthurI18n.t ? ArthurI18n.t.bind(ArthurI18n) : function (s) { return s; };
+    bestHint.textContent =
+      bestScore > 0
+        ? tr('Your best score:') + ' ' + bestScore
+        : tr('No best score yet — go catch snacks!');
+  }
+  syncBestUi();
+
+  const BASKET_W = 96;
+  const BASKET_H = 44;
+  const BASKET_Y = H - 52;
+
+  const GOOD = [
+    { id: 'donut', emoji: '🍩', pts: 12, r: 26 },
+    { id: 'pizza', emoji: '🍕', pts: 15, r: 28 },
+    { id: 'cookie', emoji: '🍪', pts: 10, r: 24 },
+    { id: 'cupcake', emoji: '🧁', pts: 14, r: 26 },
+    { id: 'star', emoji: '⭐', pts: 40, r: 30, rare: true },
+    { id: 'rainbow', emoji: '🌈', emojiAlt: '🍬', pts: 20, r: 28, power: 'double' },
+  ];
+  const BAD = [
+    { id: 'broccoli', emoji: '🥦', r: 26 },
+    { id: 'bomb', emoji: '💣', r: 28 },
+  ];
+
+  let screen = 'hub';
+  let playing = false;
+  let needsFocus = true;
+  let score = 0;
+  let lives = 3;
+  let combo = 0;
+  let comboTimer = 0;
+  let spawnT = 0;
+  let spawnGap = 0.72;
+  let runT = 0;
+  let doubleT = 0;
+  let shakeT = 0;
+  let floatTexts = [];
+  let particles = [];
+  let items = [];
+  let keys = {};
+  let mouseX = W * 0.5;
+  let basketX = W * 0.28 - BASKET_W * 0.5;
+  let basket2X = W * 0.72 - BASKET_W * 0.5;
+  let twoPlayer = false;
+
+  function disarmTap() {
+    if (tapOverlay) tapOverlay.classList.add('hidden');
+    needsFocus = false;
+  }
+  function armTap() {
+    needsFocus = true;
+    if (tapOverlay) tapOverlay.classList.remove('hidden');
+  }
+
+  function enterHub() {
+    screen = 'hub';
+    playing = false;
+    hubPanel.style.display = 'block';
+    playShell.classList.remove('open');
+    hud.classList.remove('visible');
+    gameOverOverlay.classList.add('hidden');
+    gameOverOverlay.setAttribute('aria-hidden', 'true');
+    armTap();
+    drawHubBg();
+  }
+
+  function drawHubBg() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, '#2a1848');
+    g.addColorStop(0.5, '#1a1030');
+    g.addColorStop(1, '#301848');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = '48px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🍩', W * 0.3, H * 0.42);
+    ctx.fillText('🍕', W * 0.5, H * 0.38);
+    ctx.fillText('⭐', W * 0.7, H * 0.44);
+  }
+
+  function resetRun() {
+    score = 0;
+    lives = 3;
+    combo = 0;
+    comboTimer = 0;
+    spawnT = 0;
+    spawnGap = 0.72;
+    runT = 0;
+    doubleT = 0;
+    shakeT = 0;
+    floatTexts = [];
+    particles = [];
+    items = [];
+    basketX = W * 0.28 - BASKET_W * 0.5;
+    basket2X = W * 0.72 - BASKET_W * 0.5;
+    updateHud();
+  }
+
+  function basketRectFor(bx) {
+    return { x: bx, y: BASKET_Y, w: BASKET_W, h: BASKET_H };
+  }
+
+  function updateHud() {
+    scoreEl.textContent = String(score);
+    comboEl.textContent = '×' + Math.max(1, combo);
+    livesEl.textContent = '❤'.repeat(lives) + '🖤'.repeat(Math.max(0, 3 - lives));
+  }
+
+  function startPlay() {
+    screen = 'play';
+    hubPanel.style.display = 'none';
+    playShell.classList.add('open');
+    hud.classList.add('visible');
+    gameOverOverlay.classList.add('hidden');
+    resetRun();
+    playing = true;
+    armTap();
+  }
+
+  function gameOver() {
+    if (
+      window.ArthurModes &&
+      ArthurModes.endlessContinueRun({
+        hudEl: document.getElementById('hud'),
+        restart: function () {
+          resetRun();
+          playing = true;
+        },
+      })
+    ) {
+      return;
+    }
+
+    playing = false;
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem(LS_BEST, String(bestScore));
+      syncBestUi();
+      goTitle.textContent = window.ArthurI18n && ArthurI18n.t ? ArthurI18n.t('New best score!') : 'New best score!';
+    } else {
+      goTitle.textContent = window.ArthurI18n && ArthurI18n.t ? ArthurI18n.t('Game over!') : 'Game over!';
+    }
+    if (window.ArthurProfile && score >= 250) {
+      ArthurProfile.grant('snack_catcher');
+    }
+    var tr = window.ArthurI18n && ArthurI18n.t ? ArthurI18n.t.bind(ArthurI18n) : function (s) { return s; };
+    goMsg.textContent =
+      tr('You scored ') + score + (combo > 2 ? tr(' points') + tr(' — nice combos!') : tr(' points!'));
+    gameOverOverlay.classList.remove('hidden');
+    gameOverOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function spawnItem() {
+    const roll = Math.random();
+    const speedBase = 118 + runT * 4.5;
+    let spec;
+    if (roll < 0.14) {
+      spec = BAD[Math.random() < 0.55 ? 0 : 1];
+      items.push({
+        good: false,
+        emoji: spec.emoji,
+        x: 40 + Math.random() * (W - 80),
+        y: -40,
+        vy: speedBase * (0.92 + Math.random() * 0.2),
+        r: spec.r,
+        spin: (Math.random() - 0.5) * 3,
+        rot: 0,
+      });
+      return;
+    }
+    let pool = GOOD.filter(function (g) {
+      return !g.rare;
+    });
+    if (roll > 0.92) pool = GOOD.filter(function (g) {
+      return g.rare || g.power;
+    });
+    spec = pool[(Math.random() * pool.length) | 0];
+    items.push({
+      good: true,
+      emoji: spec.emoji,
+      x: 40 + Math.random() * (W - 80),
+      y: -40,
+      vy: speedBase * (0.88 + Math.random() * 0.15),
+      r: spec.r,
+      pts: spec.pts,
+      power: spec.power || null,
+      spin: (Math.random() - 0.5) * 2.5,
+      rot: 0,
+    });
+  }
+
+  function burst(x, y, color, n) {
+    let i;
+    for (i = 0; i < (n || 12); i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 60 + Math.random() * 180;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        t: 0,
+        maxT: 0.35 + Math.random() * 0.25,
+        color: color,
+        size: 3 + Math.random() * 5,
+      });
+    }
+  }
+
+  function addFloat(x, y, text, color) {
+    floatTexts.push({ x: x, y: y, text: text, color: color || '#fff', t: 0, maxT: 0.85 });
+  }
+
+  function basketRect() {
+    return { x: basketX, y: BASKET_Y, w: BASKET_W, h: BASKET_H };
+  }
+
+  function circleHit(cx, cy, cr, rect) {
+    const nx = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
+    const ny = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
+    const dx = cx - nx;
+    const dy = cy - ny;
+    return dx * dx + dy * dy <= cr * cr;
+  }
+
+  function tick(dt) {
+    if (!playing) {
+      if (screen === 'hub') drawHubBg();
+      requestAnimationFrame(tickLoop);
+      return;
+    }
+
+    runT += dt;
+    if (doubleT > 0) doubleT -= dt;
+    if (shakeT > 0) shakeT -= dt;
+    if (comboTimer > 0) {
+      comboTimer -= dt;
+      if (comboTimer <= 0) combo = 0;
+    }
+
+    spawnT -= dt;
+    if (spawnT <= 0) {
+      spawnItem();
+      spawnGap = Math.max(0.32, 0.72 - runT * 0.008);
+      spawnT = spawnGap * (0.75 + Math.random() * 0.5);
+    }
+
+    if (twoPlayer) {
+      let ax1 = 0;
+      if (keys.ArrowLeft) ax1 -= 1;
+      if (keys.ArrowRight) ax1 += 1;
+      if (ax1) basketX += ax1 * 520 * dt;
+      basketX = Math.max(8, Math.min(W * 0.5 - BASKET_W - 8, basketX));
+      let ax2 = 0;
+      if (keys.a || keys.A) ax2 -= 1;
+      if (keys.d || keys.D) ax2 += 1;
+      if (ax2) basket2X += ax2 * 520 * dt;
+      basket2X = Math.max(W * 0.5 + 8, Math.min(W - BASKET_W - 8, basket2X));
+    } else {
+      let ax = 0;
+      if (keys.ArrowLeft || keys.a || keys.A) ax -= 1;
+      if (keys.ArrowRight || keys.d || keys.D) ax += 1;
+      const targetX = ax !== 0 ? basketX + ax * 520 * dt : mouseX - BASKET_W * 0.5;
+      if (ax !== 0) {
+        basketX += ax * 520 * dt;
+      } else {
+        basketX += (targetX - basketX) * Math.min(1, 14 * dt);
+      }
+      basketX = Math.max(8, Math.min(W - BASKET_W - 8, basketX));
+    }
+
+    let i;
+    for (i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.y += it.vy * dt;
+      it.rot += it.spin * dt;
+      const br1 = basketRectFor(basketX);
+      const br2 = twoPlayer ? basketRectFor(basket2X) : null;
+      const hit1 = circleHit(it.x, it.y, it.r * 0.85, br1);
+      const hit2 = br2 && circleHit(it.x, it.y, it.r * 0.85, br2);
+      if (hit1 || hit2) {
+        if (it.good) {
+          combo++;
+          comboTimer = 2.2;
+          const mult = (doubleT > 0 ? 2 : 1) * Math.min(5, 1 + Math.floor(combo / 4));
+          const pts = (it.pts || 10) * mult;
+          score += pts;
+          burst(it.x, it.y, '#ffb8f0', 14);
+          addFloat(it.x, it.y - 20, '+' + pts, '#ffe8a0');
+          if (it.power === 'double') {
+            doubleT = 6;
+            addFloat(it.x, it.y - 44, 'DOUBLE!', '#a8f0ff');
+          }
+          if (it.pts >= 35) addFloat(it.x, it.y - 64, 'STAR!', '#fff8c0');
+        } else {
+          lives--;
+          combo = 0;
+          comboTimer = 0;
+          shakeT = 0.35;
+          burst(it.x, it.y, '#88ff88', 10);
+          addFloat(it.x, it.y - 20, it.emoji === '💣' ? 'BOOM!' : 'YUCK!', '#ff8888');
+          if (lives <= 0) {
+            updateHud();
+            gameOver();
+            draw();
+            requestAnimationFrame(tickLoop);
+            return;
+          }
+        }
+        items.splice(i, 1);
+        updateHud();
+        continue;
+      }
+      if (it.y - it.r > H + 20) {
+        if (it.good) {
+          combo = 0;
+          comboTimer = 0;
+        }
+        items.splice(i, 1);
+      }
+    }
+
+    for (i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.t += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += 320 * dt;
+      if (p.t >= p.maxT) particles.splice(i, 1);
+    }
+    for (i = floatTexts.length - 1; i >= 0; i--) {
+      floatTexts[i].t += dt;
+      floatTexts[i].y -= 48 * dt;
+      if (floatTexts[i].t >= floatTexts[i].maxT) floatTexts.splice(i, 1);
+    }
+
+    updateHud();
+    draw();
+    requestAnimationFrame(tickLoop);
+  }
+
+  let last = performance.now();
+  function tickLoop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    tick(dt);
+  }
+
+  function draw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    let sx = 0;
+    let sy = 0;
+    if (shakeT > 0) {
+      sx = (Math.random() - 0.5) * 10 * (shakeT / 0.35);
+      sy = (Math.random() - 0.5) * 8 * (shakeT / 0.35);
+    }
+    ctx.save();
+    ctx.translate(sx, sy);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#4a2878');
+    bg.addColorStop(0.45, '#2a1848');
+    bg.addColorStop(1, '#1a0c28');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const t = performance.now() * 0.001;
+    ctx.globalAlpha = 0.15;
+    for (let s = 0; s < 8; s++) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(
+        ((s * 137 + t * 20) % W),
+        ((s * 89 + t * 12) % (H * 0.7)),
+        2 + (s % 3),
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    let i;
+    for (i = 0; i < items.length; i++) {
+      const it = items[i];
+      ctx.save();
+      ctx.translate(it.x, it.y);
+      ctx.rotate(it.rot);
+      ctx.font = (it.r * 1.35) + 'px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(it.emoji, 0, 0);
+      ctx.restore();
+    }
+
+    function drawBasket(bx, label, tint) {
+      const bxc = bx + BASKET_W * 0.5;
+      const by = BASKET_Y + BASKET_H * 0.5;
+      ctx.fillStyle = tint || '#5a3820';
+      ctx.beginPath();
+      ctx.ellipse(bxc, by + 8, BASKET_W * 0.52, BASKET_H * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#c89860';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fillStyle = '#8a5830';
+      ctx.fillRect(bx + 8, BASKET_Y - 6, BASKET_W - 16, 10);
+      ctx.font = '28px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🧺', bxc, by - 2);
+      if (twoPlayer && label) {
+        ctx.font = '700 11px system-ui,sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillText(label, bxc, BASKET_Y - 14);
+      }
+    }
+    if (twoPlayer) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5, 0);
+      ctx.lineTo(W * 0.5, H);
+      ctx.stroke();
+    }
+    drawBasket(basketX, twoPlayer ? 'P1' : null, '#5a3820');
+    if (twoPlayer) drawBasket(basket2X, 'P2', '#4a2848');
+
+    if (doubleT > 0) {
+      ctx.fillStyle = 'rgba(255, 220, 255, 0.9)';
+      ctx.font = '700 15px system-ui,sans-serif';
+      ctx.fillText('DOUBLE POINTS!', W * 0.5, 36);
+    }
+
+    for (i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const u = 1 - p.t / p.maxT;
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = u;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * u, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    for (i = 0; i < floatTexts.length; i++) {
+      const f = floatTexts[i];
+      const u = 1 - f.t / f.maxT;
+      ctx.fillStyle = f.color;
+      ctx.globalAlpha = u;
+      ctx.font = '800 22px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  function onKey(ev, down) {
+    keys[ev.key] = down;
+    if (['ArrowLeft', 'ArrowRight', ' '].indexOf(ev.key) >= 0) ev.preventDefault();
+  }
+
+  canvas.addEventListener('mousemove', function (e) {
+    const r = canvas.getBoundingClientRect();
+    mouseX = ((e.clientX - r.left) / r.width) * W;
+  });
+
+  canvas.addEventListener(
+    'touchmove',
+    function (e) {
+      if (!e.touches.length) return;
+      const r = canvas.getBoundingClientRect();
+      mouseX = ((e.touches[0].clientX - r.left) / r.width) * W;
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+
+  function focusGame() {
+    try {
+      canvas.focus({ preventScroll: true });
+    } catch (e1) {}
+  }
+
+  function tryStartFromTap() {
+    if (!needsFocus) return;
+    disarmTap();
+    focusGame();
+    if (screen === 'hub') startPlay();
+  }
+
+  tapOverlay.addEventListener('click', tryStartFromTap);
+  tapOverlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') tryStartFromTap();
+  });
+
+  btnPlay.addEventListener('click', function () {
+    startPlay();
+    disarmTap();
+    focusGame();
+  });
+  btnRetry.addEventListener('click', function () {
+    gameOverOverlay.classList.add('hidden');
+    resetRun();
+    playing = true;
+    disarmTap();
+    focusGame();
+  });
+  btnMenu.addEventListener('click', enterHub);
+
+  window.addEventListener('keydown', function (e) {
+    onKey(e, true);
+    if (e.key === 'Escape') {
+      if (screen === 'play') enterHub();
+      return;
+    }
+    if (needsFocus && screen === 'play') tryStartFromTap();
+  });
+  window.addEventListener('keyup', function (e) {
+    onKey(e, false);
+  });
+
+  enterHub();
+  requestAnimationFrame(tickLoop);
+  if (window.ArthurModes) {
+    twoPlayer = ArthurModes.isTwoPlayer();
+    ArthurModes.boot({
+      hudEl: document.getElementById('hud'),
+      onPlay: function () {
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+      onTwoPlayerStart: function () {
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+      onTutorial: function () {
+        ArthurModes.showTutorial(ArthurModes.gameId(), function () {
+          var b = document.getElementById('btnPlay');
+          if (b) b.click();
+        });
+      },
+      onEndless: function () {
+        window.__arthurEndless = true;
+        ArthurModes.markEndlessSession();
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+      onTutorialStart: function () {
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+    });
+  }
+
+  window.addEventListener('arthur-lang', function () {
+    syncBestUi();
+    if (window.ArthurI18n) ArthurI18n.apply(document);
+  });
+
+})();
+  </script>
+<script src="arthur-i18n.js"></script>
+</body>
+</html>

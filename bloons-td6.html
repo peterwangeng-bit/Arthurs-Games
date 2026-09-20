@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#6ec8ff" />
+  <title>Bloons TD 6 — Arthur Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #5ec8ff;
+      --bg2: #7ed0a0;
+      --panel: #fff6e8;
+      --panel2: #ffe8c8;
+      --text: #2a3040;
+      --muted: #5a6878;
+      --accent: #ff8c28;
+      --accent2: #48c858;
+      --danger: #ff4455;
+      --line: rgba(40, 60, 90, 0.12);
+      --font: "Nunito", "Fredoka", "Trebuchet MS", sans-serif;
+      --display: "Fredoka", "Nunito", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+    }
+    body {
+      background:
+        radial-gradient(ellipse 90% 55% at 50% -5%, #fff4d0 0%, transparent 55%),
+        linear-gradient(180deg, #6ec8ff 0%, #8ad4ff 35%, #7ed0a0 70%, #5cbc78 100%);
+    }
+    .hidden { display: none !important; }
+
+    /* —— Screens —— */
+    .screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* —— Home —— */
+    #screen-home {
+      align-items: center;
+      padding: 28px 16px 48px;
+    }
+    .top-chip {
+      width: min(920px, 100%);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding: 14px 18px;
+      border-radius: 22px;
+      background: linear-gradient(165deg, #fffaf0, #ffe8c0);
+      border: 3px solid #ffb040;
+      box-shadow: 0 6px 0 #e09020;
+    }
+    .brand {
+      font-family: var(--display);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-size: 1.15rem;
+      color: #ff7020;
+    }
+    .currencies {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .currencies strong { color: #e07010; font-weight: 900; }
+
+    .profile-flair {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin: 0 auto 14px;
+      padding: 8px 14px 8px 8px;
+      border-radius: 999px;
+      background: rgba(255, 250, 240, 0.92);
+      border: 3px solid #ffb040;
+      box-shadow: 0 4px 0 rgba(180, 120, 20, 0.25);
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--text);
+      max-width: 100%;
+    }
+    .profile-flair.on { display: inline-flex; }
+    .profile-flair .av {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+      background: linear-gradient(145deg, #fff8e8, #ffe0a8);
+      border: 3px solid #ffb040;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .profile-flair .av .pin {
+      position: absolute;
+      right: -6px;
+      top: -6px;
+      font-size: 0.95rem;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+    }
+    .profile-flair .meta { min-width: 0; text-align: left; line-height: 1.25; }
+    .profile-flair .meta small {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    body.btd6-gold-frame .profile-flair,
+    body.btd6-gold-frame .top-chip {
+      border-color: #e8b820;
+      box-shadow: 0 0 0 2px #fff3b0, 0 6px 0 #c09018;
+    }
+    body.btd6-gold-frame .profile-flair .av { border-color: #e8b820; }
+
+    .home-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: min(420px, 100%);
+      gap: 14px;
+    }
+    .home-stage h1 {
+      margin: 0 0 6px;
+      font-family: var(--display);
+      font-size: clamp(2.2rem, 7vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: center;
+      color: #fff;
+      text-shadow:
+        0 3px 0 #e07020,
+        0 6px 0 rgba(0, 0, 0, 0.15);
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+    }
+    .tagline {
+      margin: 0 0 18px;
+      color: #1a3848;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 800;
+      line-height: 1.5;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+    }
+    .btn {
+      appearance: none;
+      border: 3px solid #2a3040;
+      background: linear-gradient(180deg, #fff8e8, #ffe0a8);
+      color: #2a3040;
+      font: inherit;
+      font-family: var(--display);
+      font-weight: 700;
+      padding: 14px 20px;
+      border-radius: 18px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 5px 0 #c09040;
+      transition: filter 0.12s, transform 0.1s;
+    }
+    .btn:hover { filter: brightness(1.06); }
+    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c09040; }
+    .btn.primary {
+      background: linear-gradient(180deg, #ffd060, #ff9020);
+      color: #2a1808;
+      border-color: #c06010;
+      box-shadow: 0 5px 0 #c06010;
+      font-size: 1.15rem;
+    }
+    .btn.ghost {
+      background: rgba(255, 255, 255, 0.55);
+      border-color: rgba(40, 60, 90, 0.25);
+      color: var(--text);
+      width: auto;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      box-shadow: 0 3px 0 rgba(40, 60, 90, 0.2);
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
+    /* —— Sub screens —— */
+    .sub-screen {
+      padding: 20px 16px 40px;
+      align-items: center;
+    }
+    .sub-inner {
+      width: min(960px, 100%);
+    }
+    .sub-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .sub-head h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+    .map-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .map-card {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      border: 3px solid #ffb040;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fffaf0, #ffe8c8);
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 5px 0 #e09020;
+      transition: transform 0.12s;
+    }
+    .map-card:hover {
+      transform: translateY(-4px);
+    }
+    .map-thumb {
+      background: #4ec050;
+      line-height: 0;
+      border-bottom: 3px solid #ffb040;
+    }
+    .map-thumb canvas { width: 100%; height: auto; display: block; }
+    .map-info { padding: 12px 14px 14px; }
+    .map-info h3 { margin: 0 0 6px; font-size: 1rem; }
+    .diff {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+    .diff.beginner { background: #2a6840; color: #c8ffd8; }
+    .diff.intermediate { background: #8a5818; color: #ffe8c0; }
+    .diff.advanced { background: #8a2828; color: #ffd0d0; }
+    .diff.expert { background: #4a2080; color: #e8d0ff; }
+    .map-desc {
+      margin: 6px 0 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .medal { color: var(--accent); font-size: 0.8rem; font-weight: 700; }
+    .play { display: block; margin-top: 8px; color: var(--accent2); font-weight: 700; font-size: 0.85rem; }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .knowledge-branch {
+      grid-column: 1 / -1;
+      margin: 12px 0 0;
+      font-family: var(--display);
+      font-size: 1.15rem;
+      color: var(--accent, #e07010);
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 4px;
+    }
+    .shop-card {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+    }
+    .shop-card.owned { border-color: rgba(126, 207, 106, 0.4); }
+    .shop-card.locked { opacity: 0.72; }
+    .shop-card h3 { margin: 0 0 6px; font-size: 0.95rem; }
+    .shop-card p { margin: 0 0 12px; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .shop-card .req-note {
+      margin: -6px 0 10px;
+      font-size: 0.72rem;
+      color: #c87850;
+      font-weight: 700;
+    }
+    .shop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+    .shop-row .btn { width: auto; padding: 8px 14px; font-size: 0.8rem; }
+    .owned-tag { color: var(--accent2); font-weight: 700; }
+    .knowledge-bars {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+    .knowledge-bars .kbar {
+      flex: 1;
+      height: 8px;
+      max-width: 48px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+    .knowledge-bars .kbar.on {
+      background: linear-gradient(90deg, #ffb020, #ffe070, #ffb020);
+      background-size: 200% 100%;
+      border-color: rgba(255, 220, 100, 0.85);
+      box-shadow:
+        0 0 8px rgba(255, 200, 60, 0.85),
+        0 0 16px rgba(255, 160, 40, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      animation: kbarGlow 1.6s ease-in-out infinite;
+    }
+    @keyframes kbarGlow {
+      0%, 100% { background-position: 0% 50%; filter: brightness(1); }
+      50% { background-position: 100% 50%; filter: brightness(1.15); }
+    }
+    .skill-rebirth {
+      grid-column: 1 / -1;
+      margin-bottom: 8px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 200, 80, 0.25);
+      border-radius: 10px;
+      background: rgba(20, 28, 40, 0.65);
+    }
+    .skill-rebirth.ready {
+      border-color: rgba(126, 207, 106, 0.55);
+      background: rgba(30, 50, 36, 0.55);
+    }
+    .skill-rebirth .rebirth-hint {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+      opacity: 0.92;
+    }
+    .skill-rebirth .rebirth-hint.muted { opacity: 0.65; }
+    .skill-rebirth .rebirth-active {
+      margin: 0 0 8px;
+      font-weight: 700;
+      color: #ffe566;
+    }
+    .skill-rebirth .rebirth-btn {
+      background: linear-gradient(180deg, #7ecf6a, #3a9a4a);
+      border-color: #9fe08a;
+      font-weight: 700;
+    }
+    .shop-card .level-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #ffe070;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 6px;
+    }
+
+    /* —— Battle: locked viewport, map left, wood sidebar right —— */
+    #screen-battle {
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+    .battle-layout.btd6-container {
+      display: grid;
+      grid-template-columns: 220px 1fr 160px;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+    }
+    .top-hud {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, #fff8e0, #ffd090);
+      border-bottom: 4px solid #e09020;
+      z-index: 2;
+      flex-shrink: 0;
+      font-family: var(--display);
+    }
+    .hud-stat {
+      font-weight: 800;
+      font-size: 1rem;
+      min-width: 4.5rem;
+      color: #2a3040;
+    }
+    .hud-stat span { color: #6a7080; font-weight: 700; font-size: 0.75rem; margin-right: 4px; }
+    .hud-stat.lives { color: #e03848; }
+    .hud-stat.cash { color: #c87810; }
+    .hud-controls {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .hud-controls .btn {
+      width: auto;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+    }
+    .hud-controls .btn.auto-on {
+      background: linear-gradient(180deg, #b8f080, #48c858);
+      border-color: #2a9040;
+      color: #143018;
+      box-shadow: 0 3px 0 #2a9040;
+    }
+    .speed-tag {
+      font-size: 0.8rem;
+      color: #5a6878;
+      min-width: 3.5rem;
+      font-weight: 800;
+    }
+
+    .inspect-panel {
+      background: linear-gradient(180deg, #fffaf0, #ffe8c8);
+      border-right: 4px solid #e09020;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      min-height: 0;
+      height: 100%;
+      color: #2a3040;
+    }
+    .inspect-panel .rng-panel {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(40, 20, 50, 0.55), rgba(15, 10, 25, 0.65));
+      border: 2px solid rgba(180, 120, 255, 0.35);
+    }
+    .inspect-panel .rng-panel .btn {
+      width: 100%;
+      margin-top: 6px;
+    }
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 0.95rem;
+      color: #e07010;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .insp-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+    .path-note { color: var(--muted); font-size: 0.8rem; }
+    .insp-stats { color: var(--muted); margin-bottom: 8px; font-size: 0.75rem; }
+    .target-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .target-row select {
+      flex: 1;
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px;
+      font: inherit;
+    }
+    .upgrade-paths { display: flex; flex-direction: column; gap: 10px; }
+    .up-path {
+      padding: 8px;
+      border-radius: 10px;
+      background: var(--bg2);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .up-label { font-weight: 700; margin-bottom: 6px; font-size: 0.75rem; color: var(--accent2); }
+    .up-tier {
+      width: 36px;
+      height: 28px;
+      margin: 0 3px 4px 0;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #2a3228;
+      color: var(--muted);
+      font-size: 0.65rem;
+      cursor: pointer;
+    }
+    .up-tier.owned { background: #3a6840; color: #dfffe0; border-color: #6a9a60; }
+    .up-tier.available { background: #4a3a18; color: #ffe8a0; border-color: var(--accent); cursor: pointer; }
+    .up-tier.locked { opacity: 0.4; cursor: not-allowed; }
+    .btn-up {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+      padding: 6px 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 176, 64, 0.35);
+      background: #2e3820;
+      color: #ffe8c0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .btn-up:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-up.locked-note,
+    .locked-note {
+      opacity: 0.45;
+      cursor: not-allowed;
+      font-size: 0.75rem;
+      padding: 8px 10px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .btn-sell {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(224, 80, 80, 0.45);
+      background: #3a2020;
+      color: #ffc8c8;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .muted { color: var(--muted); line-height: 1.45; }
+
+    .game-canvas-area {
+      background: #5cbc68;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+    #btd6Canvas,
+    #btd6WebGLCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      box-shadow: 0 0 0 4px #ffb040, 0 8px 0 #e09020;
+      border-radius: 12px;
+    }
+    #btd6WebGLCanvas {
+      display: none !important;
+    }
+    #btd6Canvas {
+      position: relative;
+      z-index: 2;
+      cursor: crosshair;
+      background: #5cbc68;
+    }
+    #btd6Canvas.btd6-hud-overlay {
+      background: transparent;
+    }
+
+    .tower-sidebar {
+      background: linear-gradient(180deg, #fff0d0, #ffd090);
+      border-left: 4px solid #e09020;
+      height: 100%;
+      max-height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .buy-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 6px 6px;
+      border-bottom: 3px solid #e09020;
+      flex-shrink: 0;
+    }
+    .buy-tabs button {
+      appearance: none;
+      border: 2px solid transparent;
+      background: transparent;
+      color: #6a5040;
+      font: inherit;
+      font-family: var(--display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 8px 4px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .buy-tabs button.active {
+      background: #fffaf0;
+      color: #e07010;
+      border-color: #ffb040;
+    }
+    .sidebar-scroll-content {
+      height: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: #ffb040 transparent;
+    }
+    .sidebar-scroll-content::-webkit-scrollbar { width: 6px; }
+    .sidebar-scroll-content::-webkit-scrollbar-thumb {
+      background: #ffb040;
+      border-radius: 4px;
+    }
+
+    .tower-slot,
+    .tower-card {
+      appearance: none;
+      background: linear-gradient(180deg, #fffaf0, #ffe0a8);
+      border: 3px solid #ffb040;
+      border-radius: 14px;
+      min-height: 70px;
+      height: auto;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #2a3040;
+      font: inherit;
+      font-family: var(--display);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 0 #e09020;
+    }
+    .tower-slot:hover,
+    .tower-card:hover {
+      transform: scale(1.04);
+    }
+    .tower-slot.selected {
+      border-color: #48c858;
+      box-shadow: 0 4px 0 #2a9040;
+      background: linear-gradient(180deg, #f0ffe8, #c8f0a0);
+    }
+    .tower-slot.unaffordable { opacity: 0.45; }
+    .slot-name {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+    .slot-cost {
+      display: block;
+      font-size: 0.78rem;
+      color: #c87810;
+      margin-top: 4px;
+      font-weight: 800;
+    }
+    .slot-key {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.62rem;
+      color: #8a7060;
+      font-weight: 800;
+    }
+
+    /* toast / overlay */
+    #btd6Toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%) translateY(20px);
+      background: #fffaf0;
+      border: 3px solid #ffb040;
+      color: #2a3040;
+      padding: 10px 18px;
+      border-radius: 16px;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 50;
+      box-shadow: 0 5px 0 #e09020;
+    }
+    #btd6Toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #btd6Overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 120, 180, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    .overlay-card {
+      width: min(360px, 92vw);
+      padding: 28px 24px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #fffaf0, #ffe8c0);
+      border: 4px solid #ffb040;
+      box-shadow: 0 8px 0 #e09020;
+      text-align: center;
+      font-family: var(--display);
+      color: #2a3040;
+    }
+    .overlay-card h2 { margin: 0 0 8px; font-size: 1.8rem; color: #e07010; }
+    .overlay-card p { margin: 0 0 18px; color: #5a6878; font-weight: 700; }
+    #btd6Overlay[data-kind="victory"] h2 { color: #2a9040; }
+    #btd6Overlay[data-kind="defeat"] h2 { color: #e03848; }
+
+    .lang-toggle {
+      margin-left: auto;
+      width: auto !important;
+      padding: 8px 14px !important;
+      font-size: 0.9rem !important;
+    }
+    .hint {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #1a3848;
+      text-align: center;
+      max-width: 28rem;
+      line-height: 1.45;
+      font-weight: 800;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .pvp-form {
+      display: grid;
+      gap: 12px;
+      max-width: 420px;
+      text-align: left;
+    }
+    .pvp-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .pvp-form input,
+    .pvp-form select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 2px solid #ffb040;
+      background: #fffaf0;
+      font: inherit;
+      font-weight: 700;
+    }
+    .pvp-role-note {
+      margin: -4px 0 4px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #c05030;
+    }
+    .hud-stat.bloon-eco span { color: #a030c0; }
+    .hud-stat.phase strong { font-size: 0.85rem; }
+    .bloon-send-slot .slot-name { color: #6a2080; }
+    body.pvp-send-phase .tower-sidebar { box-shadow: inset 0 0 0 3px #c060e0; }
+    body.pvp-build-phase .tower-sidebar { box-shadow: inset 0 0 0 3px #40a050; }
+
+    @media (max-width: 900px) {
+      .battle-layout.btd6-container {
+        grid-template-columns: 1fr 110px;
+        grid-template-rows: auto auto 1fr;
+      }
+      .inspect-panel {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-height: 140px;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .game-canvas-area { grid-column: 1; grid-row: 3; }
+      .tower-sidebar { grid-column: 2; grid-row: 3; }
+      .buy-tabs { flex-direction: row; flex-wrap: wrap; }
+      .tower-slot, .tower-card { min-height: 58px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- HOME -->
+  <section id="screen-home" class="screen">
+    <div class="top-chip">
+      <div class="brand">ARTHUR GAMES</div>
+      <div class="currencies">
+        <span><span data-i18n="chip.mm">MM</span> <strong id="profileMM">0</strong></span>
+        <span><span data-i18n="chip.trophies">Trophies</span> <strong id="profileTR">0</strong></span>
+        <span><span data-i18n="chip.knowledge">Skills</span> <strong id="profileKP">0</strong></span>
+      </div>
+      <button type="button" class="btn ghost lang-toggle" id="btnLang" title="Language / 语言">中文</button>
+    </div>
+    <div class="home-stage" id="homeStage">
+      <h1 data-i18n="home.title">BLOONS TD</h1>
+      <p class="tagline" data-i18n="home.tagline">Pop bloons through 40 rounds. Place monkeys, crosspath upgrades, earn trophies &amp; skill points.</p>
+      <button type="button" class="btn primary" id="btnPlay" data-node="home.btn.play" data-i18n="home.play">Play</button>
+      <button type="button" class="btn" id="btnPvp" data-node="home.btn.pvp" data-i18n="home.pvp">2 Player</button>
+      <button type="button" class="btn" id="btnMapSelect" data-node="home.btn.map_select" data-i18n="home.maps">Maps</button>
+      <button type="button" class="btn" id="btnKnowledge" data-node="home.btn.knowledge" data-i18n="home.knowledge">Skill Tree</button>
+      <button type="button" class="btn" id="btnStore" data-node="home.btn.trophy_store" data-i18n="home.store">Trophy Store</button>
+      <p class="hint" data-i18n="home.hint">Hotkeys in battle: 1–5 category tabs · QWER buy slots · Space start round · P pause · Esc cancel</p>
+    </div>
+  </section>
+
+  <!-- 2 PLAYER SETUP -->
+  <section id="screen-pvpsetup" class="screen sub-screen hidden">
+    <div class="sub-inner">
+      <div class="sub-head">
+        <button type="button" class="btn ghost" data-back="home" data-i18n="back">← Back</button>
+        <h2 data-i18n="pvp.title">2 Player — Monkeys vs Bloons</h2>
+      </div>
+      <p class="tagline" style="text-align:left;margin-bottom:14px" data-i18n="pvp.tagline">Hot-seat turns: Monkey builds, Bloon spends eco to send a wave, then fight. Leaking lives pays the Bloon player extra cash.</p>
+      <form id="pvpSetupForm" class="pvp-form">
+        <label><span data-i18n="pvp.map">Map</span>
+          <select id="pvpMap"></select>
+        </label>
+        <label><span data-i18n="pvp.p1role">Player 1 plays as</span>
+          <select id="pvpP1Role">
+            <option value="monkey" data-i18n="pvp.role.monkey">Monkeys (defend)</option>
+            <option value="bloon" data-i18n="pvp.role.bloon">Bloons (attack)</option>
+          </select>
+        </label>
+        <p class="pvp-role-note" id="pvpRoleNote" data-i18n="pvp.p2bloon">Player 2 is Bloons.</p>
+        <label><span data-i18n="pvp.lives">Starting lives</span>
+          <input type="number" id="pvpLives" min="20" max="500" value="150" />
+        </label>
+        <label><span data-i18n="pvp.monkeyCash">Monkey starting cash</span>
+          <input type="number" id="pvpMonkeyCash" min="200" max="5000" step="50" value="650" />
+        </label>
+        <label><span data-i18n="pvp.bloonCash">Bloon starting eco</span>
+          <input type="number" id="pvpBloonCash" min="50" max="3000" step="25" value="200" />
+        </label>
+        <label><span data-i18n="pvp.maxTurns">Turns to survive (Monkey win)</span>
+          <input type="number" id="pvpMaxTurns" min="5" max="40" value="20" />
+        </label>
+        <button type="submit" class="btn primary" data-i18n="pvp.start">Start 2 Player</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- MAP SELECT -->
+  <section id="screen-mapselect" class="screen sub-screen hidden">
+    <div class="sub-inner">
+      <div class="sub-head">
+        <button type="button" class="btn ghost" data-back="home" data-i18n="back">← Back</button>
+        <h2 data-i18n="maps.title">Select Map</h2>
+      </div>
+      <div class="map-grid" id="mapGrid"></div>
+    </div>
+  </section>
+
+  <!-- SKILL TREE -->
+  <section id="screen-knowledge" class="screen sub-screen hidden">
+    <div class="sub-inner">
+      <div class="sub-head">
+        <button type="button" class="btn ghost" data-back="home" data-i18n="back">← Back</button>
+        <h2 data-i18n="knowledge.title">Skill Tree</h2>
+        <span class="currencies" style="margin-left:auto"><span data-i18n="knowledge.kp">SP</span> <strong id="knowledgeKP">—</strong></span>
+      </div>
+      <p class="tagline" style="text-align:left;margin-bottom:16px" data-i18n="knowledge.tagline">Earn +1 SP every 5 rounds (more with Skill Hustle), or +3 on a full win. Starting SP: 2. Every skill upgrades 3 times — each rank makes it stronger. Max every skill to unlock Rebirth (permanent 2× pierce, stacks). Glowing bars show your rank.</p>
+      <div class="shop-grid" id="knowledgeList"></div>
+    </div>
+  </section>
+
+  <!-- STORE -->
+  <section id="screen-store" class="screen sub-screen hidden">
+    <div class="sub-inner">
+      <div class="sub-head">
+        <button type="button" class="btn ghost" data-back="home" data-i18n="back">← Back</button>
+        <h2 data-i18n="store.title">Trophy Store</h2>
+      </div>
+      <p class="tagline" style="text-align:left;margin-bottom:16px" data-i18n="store.tagline">Win games to earn trophies. Cosmetics equip on your shared Arthur Profile (also from other games).</p>
+      <div class="shop-grid" id="storeList"></div>
+    </div>
+  </section>
+
+  <!-- BATTLE -->
+  <section id="screen-battle" class="screen hidden">
+    <div class="battle-layout btd6-container">
+      <div class="top-hud">
+        <div class="hud-stat lives"><span data-i18n="hud.lives">Lives</span><strong id="hudLives">150</strong></div>
+        <div class="hud-stat cash"><span id="hudCashLabel" data-i18n="hud.cash">Cash</span><strong id="hudCash">$650</strong></div>
+        <div class="hud-stat bloon-eco hidden" id="hudBloonEcoWrap"><span data-i18n="hud.bloonEco">Bloon Eco</span><strong id="hudBloonEco">$200</strong></div>
+        <div class="hud-stat phase hidden" id="hudPhaseWrap"><span data-i18n="hud.phase">Phase</span><strong id="hudPhase">Build</strong></div>
+        <div class="hud-stat"><span id="hudRoundLabel" data-i18n="hud.round">Round</span><strong id="hudRound">0 / 40</strong></div>
+        <div class="hud-controls">
+          <span class="speed-tag" id="hudSpeed">1x</span>
+          <button type="button" class="btn" id="btnStartRound" data-i18n="hud.start">Start Round</button>
+          <button type="button" class="btn hidden" id="btnPvpReady" data-i18n="hud.ready">Ready</button>
+          <button type="button" class="btn" id="btnAuto" title="Auto-start next rounds" data-i18n="hud.auto">Auto</button>
+          <button type="button" class="btn" id="btnPause" data-i18n="hud.pause">Pause</button>
+          <button type="button" class="btn" id="btnSpeed1">1x</button>
+          <button type="button" class="btn" id="btnSpeed2">2x</button>
+          <button type="button" class="btn" id="btnBattleMenu" data-i18n="hud.menu">Menu</button>
+        </div>
+      </div>
+
+      <aside class="inspect-panel" id="inspectPanel">
+        <h3 data-i18n="inspect.tower">Tower</h3>
+        <div id="inspectBody">
+          <p class="muted" data-i18n="inspect.empty">Select a tower or place one from the buy bar.</p>
+        </div>
+      </aside>
+
+      <main class="game-canvas-area">
+        <canvas id="btd6Canvas" width="960" height="640"></canvas>
+      </main>
+
+      <aside class="tower-sidebar">
+        <div class="buy-tabs" id="buyTabs">
+          <button type="button" data-cat="primary" class="active" data-i18n="tab.primary">1 Prim</button>
+          <button type="button" data-cat="military" data-i18n="tab.military">2 Mil</button>
+          <button type="button" data-cat="magic" data-i18n="tab.magic">3 Mag</button>
+          <button type="button" data-cat="support" data-i18n="tab.support">4 Sup</button>
+          <button type="button" data-cat="special" data-i18n="tab.special">5 Spec</button>
+        </div>
+        <div class="sidebar-scroll-content buy-slots" id="buySlots"></div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="btd6Toast"></div>
+  <div id="btd6Overlay" class="hidden">
+    <div class="overlay-card">
+      <h2 id="overlayTitle">Victory!</h2>
+      <p id="overlayMsg"></p>
+      <button type="button" class="btn primary" id="btnOverlayHome" data-i18n="overlay.home">Back to Home</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="btd6-toon-material.js"></script>
+  <script src="btd6-meshes.js"></script>
+  <script src="btd6-ortho-scene.js"></script>
+  <script src="btd6-map-init.js"></script>
+  <script src="btd6-monkey-anim.js"></script>
+  <script src="btd6-webgl-bridge.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="bloons-td6-data.js"></script>
+  <script src="bloons-td6-special.js"></script>
+  <script src="bloons-td6-zh.js"></script>
+  <script src="bloons-td6-engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      window.BTD6.init();
+    });
+  </script>
+</body>
+</html>

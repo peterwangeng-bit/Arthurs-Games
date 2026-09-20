@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blockcraft — Arthur Games</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #1a2a18;
+      color: #e8f0e0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    #wrap { position: relative; width: 100vw; height: 100vh; }
+    #game {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      outline: none;
+      background: #87bce8;
+    }
+    #hub {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(ellipse at 50% 0%, #3a6a38 0%, transparent 55%),
+        linear-gradient(180deg, #1e3a28 0%, #0e1810 100%);
+      padding: 24px;
+      text-align: center;
+      overflow: auto;
+    }
+    #hub.menu-hidden { display: none !important; }
+    #hub .menu-panel {
+      display: none;
+      width: min(420px, 94vw);
+      flex-direction: column;
+      align-items: center;
+    }
+    #hub .menu-panel.menu-panel-on {
+      display: flex;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      margin-bottom: 10px;
+      color: #c8e878;
+      text-shadow: 0 2px 0 #2a4a18, 0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+    .menu-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #c8e878;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .sub {
+      max-width: 34rem;
+      color: #9ab890;
+      line-height: 1.55;
+      margin-bottom: 22px;
+      font-size: 0.92rem;
+    }
+    .hub-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 280px;
+    }
+    .hub-btns.row {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: none;
+    }
+    .btn {
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      color: #142010;
+      background: linear-gradient(135deg, #c8e878, #7ab848);
+      box-shadow: 0 4px 24px rgba(120, 180, 60, 0.35);
+      width: 100%;
+    }
+    .hub-btns.row .btn { width: auto; min-width: 140px; }
+    .btn:hover { filter: brightness(1.06); }
+    .btn:disabled,
+    .btn.btn-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: none;
+      pointer-events: none;
+    }
+    .btn-outline {
+      background: transparent;
+      color: #c8e878;
+      border: 2px solid rgba(200, 232, 120, 0.45);
+      box-shadow: none;
+    }
+    .btn-outline:hover { background: rgba(200, 232, 120, 0.1); filter: none; }
+    .btn-ghost {
+      background: transparent;
+      color: #9ab890;
+      box-shadow: none;
+      border: 1px solid transparent;
+    }
+    .btn-ghost:hover { color: #c8e878; filter: none; }
+    .controls {
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: #6a8870;
+      max-width: 38rem;
+      line-height: 1.65;
+    }
+    .menu-card {
+      width: 100%;
+      background: rgba(8, 14, 8, 0.55);
+      border: 1px solid rgba(200, 232, 120, 0.22);
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: left;
+    }
+    .form-row {
+      margin-bottom: 12px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #9ab890;
+      margin-bottom: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(200, 232, 120, 0.25);
+      background: rgba(0, 0, 0, 0.35);
+      color: #e8f0e0;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .form-row select { cursor: pointer; }
+    .form-hint {
+      font-size: 0.72rem;
+      color: #6a8870;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .menu-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .menu-actions .btn { width: auto; flex: 1; min-width: 120px; }
+    #hud {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+    }
+    #hud.on { display: block; }
+    #crosshair {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      margin: -9px 0 0 -9px;
+    }
+    #crosshair::before,
+    #crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 2px #000;
+    }
+    #crosshair::before {
+      left: 8px;
+      top: 0;
+      width: 2px;
+      height: 18px;
+    }
+    #crosshair::after {
+      left: 0;
+      top: 8px;
+      width: 18px;
+      height: 2px;
+    }
+    #stats {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 10px 12px;
+      border-radius: 8px;
+      line-height: 1.55;
+      border: 1px solid rgba(200, 232, 120, 0.2);
+    }
+    #stats span { color: #c8e878; }
+    #hint {
+      position: absolute;
+      right: 16px;
+      top: 104px;
+      font-size: 0.72rem;
+      color: rgba(230, 240, 220, 0.75);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 14rem;
+      line-height: 1.5;
+      text-align: right;
+    }
+    #hotbar {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      z-index: 12;
+    }
+    #hotbar .slot {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.06);
+      position: relative;
+      box-sizing: border-box;
+    }
+    #hotbar .slot.on {
+      border: 3px solid #ffe14a;
+      box-shadow: 0 0 0 2px #ffe14a, inset 0 0 0 1px rgba(255, 225, 74, 0.55);
+      background: rgba(255, 225, 74, 0.12);
+    }
+    #hotbar .slot i {
+      display: block;
+      width: 28px;
+      height: 28px;
+      margin: 6px auto 0;
+      border-radius: 3px;
+      background: var(--c, #666);
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+    }
+    #hotbar .slot b {
+      position: absolute;
+      right: 4px;
+      bottom: 2px;
+      font-size: 0.62rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    #clickHint {
+      position: absolute;
+      left: 50%;
+      top: 58%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      text-shadow: 0 2px 8px #000;
+      display: none;
+    }
+    #hotbar .slot u {
+      position: absolute;
+      left: 4px;
+      bottom: 3px;
+      height: 3px;
+      display: block;
+      background: #4ade80;
+      border-radius: 2px;
+      max-width: calc(100% - 8px);
+    }
+    #invRoot { pointer-events: none; position: absolute; inset: 0; z-index: 15; }
+    .hidden { display: none !important; }
+
+    /* Creative inventory overlay */
+    .inv-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      pointer-events: auto;
+      z-index: 16;
+    }
+    .inv-overlay.hidden { display: none !important; }
+    .inv-panel {
+      pointer-events: auto;
+      position: relative;
+      width: min(980px, 96vw);
+      max-height: 90vh;
+      overflow: auto;
+      background: rgba(12, 18, 12, 0.96);
+      border: 2px solid rgba(200, 232, 120, 0.45);
+      border-radius: 12px;
+      padding: 14px;
+      color: #e8f0e0;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+    }
+    .mc-inv-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mc-catalog { width: 100%; }
+    .mc-player-inv { width: 100%; }
+    .creative-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .creative-left {
+      flex: 0 0 220px;
+      max-width: 100%;
+    }
+    .creative-right {
+      flex: 1 1 420px;
+      min-width: 240px;
+    }
+    .item-search {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      border: 2px solid rgba(200, 232, 120, 0.35);
+      background: rgba(0, 0, 0, 0.45);
+      color: #e8f0e0;
+      outline: none;
+    }
+    .item-search:focus {
+      border-color: #c8e878;
+      box-shadow: 0 0 0 2px rgba(200, 232, 120, 0.25);
+    }
+    .item-card-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      max-height: 42vh;
+      overflow: auto;
+      padding: 4px 2px 10px;
+    }
+    .item-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px 8px;
+      margin: 0;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #e8f0e0;
+      font: inherit;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .item-card:hover {
+      border-color: rgba(200, 232, 120, 0.55);
+      background: rgba(200, 232, 120, 0.08);
+    }
+    .item-card-icon {
+      display: block;
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .item-card-name {
+      display: block;
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 700;
+      color: #f2f7ea;
+      text-shadow: 0 1px 2px #000;
+      word-break: break-word;
+    }
+    .hotbar-panel {
+      display: grid !important;
+      grid-template-columns: repeat(9, 44px) !important;
+      gap: 4px;
+      margin-bottom: 8px;
+      justify-content: start;
+    }
+    .player-main {
+      margin-bottom: 6px;
+    }
+    .inv-slot[data-active="1"] {
+      border-color: #ffe14a !important;
+      box-shadow: 0 0 0 2px #ffe14a;
+      background: rgba(255, 225, 74, 0.14);
+    }
+    .creative-grid {
+      max-height: 42vh;
+      overflow: auto;
+      padding-bottom: 6px;
+    }
+    .creative-hint {
+      font-size: 0.72rem;
+      color: #8aa888;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .inv-label-hint {
+      font-weight: 500;
+      color: #8aa888;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .creative-empty {
+      grid-column: 1 / -1;
+      padding: 18px 8px;
+      color: #9ab890;
+      font-size: 0.85rem;
+    }
+    #invBtn {
+      position: absolute;
+      right: 16px;
+      bottom: 28px;
+      z-index: 13;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: 2px solid rgba(200, 232, 120, 0.4);
+      border-radius: 10px;
+      color: #c8e878;
+      background: rgba(0, 0, 0, 0.55);
+    }
+    #invBtn:hover { filter: brightness(1.1); background: rgba(20, 40, 18, 0.75); }
+    #hud.inv-open #invBtn { display: none; }
+    .inv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 800; }
+    .inv-head button { background: transparent; border: none; color: #c8e878; font-size: 1.4rem; cursor: pointer; }
+    .inv-label { font-size: 0.72rem; color: #9ab890; margin: 8px 0 4px; }
+    .inv-grid { display: grid; grid-template-columns: repeat(9, 44px); gap: 4px; }
+    .inv-grid.wide { margin-bottom: 8px; }
+    .inv-slot {
+      width: 44px; height: 44px; border-radius: 6px;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      position: relative;
+    }
+    .inv-slot i {
+      display: block;
+      width: 28px;
+      height: 28px;
+      margin: 6px auto 0;
+      border-radius: 3px;
+      background: #666;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .inv-slot b { position: absolute; right: 4px; bottom: 2px; font-size: 0.62rem; color: rgba(255,255,255,0.85); }
+    .inv-slot .dur { position: absolute; left: 4px; bottom: 3px; height: 3px; background: #4ade80; border-radius: 2px; }
+    .craft-section { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .craft-grid { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; }
+    .craft-grid .inv-slot { cursor: pointer; }
+    .craft-out { cursor: pointer; }
+    .craft-out .inv-slot { width: 44px; height: 44px; }
+    .craft-hint { flex-basis: 100%; font-size: 0.65rem; color: #8aa888; margin-top: 2px; }
+    .inv-cursor {
+      position: absolute; pointer-events: none; z-index: 5;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .inv-cursor.hidden { display: none; }
+    .inv-cursor .inv-slot { width: 40px; height: 40px; }
+    #craftBtn { padding: 8px 14px; border-radius: 8px; border: none; background: #7ab848; color: #142010; font-weight: 800; cursor: pointer; }
+    #hud.need-lock #clickHint { display: block; }
+    #hud.inv-open #clickHint { display: none !important; }
+    #hud.inv-open #crosshair { opacity: 0; }
+
+    /* Void death screen — red overlay + Respawn */
+    .void-death-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(120, 0, 0, 0.72);
+      pointer-events: auto;
+    }
+    .void-death-screen.hidden { display: none !important; }
+    .void-death-panel {
+      text-align: center;
+      padding: 28px 36px;
+      background: rgba(20, 0, 0, 0.55);
+      border: 2px solid rgba(255, 80, 80, 0.55);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+    .void-death-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 900;
+      color: #ff6a6a;
+      text-shadow: 0 2px 0 #400000, 0 0 24px rgba(255, 40, 40, 0.45);
+      margin-bottom: 8px;
+    }
+    .void-death-sub {
+      color: #e8b0b0;
+      font-size: 0.95rem;
+      margin-bottom: 22px;
+    }
+    .void-death-btn {
+      padding: 12px 28px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      color: #1a0808;
+      background: linear-gradient(135deg, #ff8a8a, #e84848);
+      box-shadow: 0 4px 20px rgba(200, 40, 40, 0.4);
+    }
+    .void-death-btn:hover { filter: brightness(1.08); }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game" tabindex="0"></canvas>
+
+    <div id="hub" role="dialog" aria-label="Blockcraft menu">
+      <!-- State: MAIN_MENU -->
+      <div class="menu-panel menu-panel-on" data-panel="MAIN_MENU">
+        <h1>Blockcraft</h1>
+        <p class="sub">
+          Infinite voxel world — dig, build, and explore. Menus run outside the 3D engine until you start a world.
+        </p>
+        <div class="hub-btns">
+          <button type="button" class="btn" data-action="singleplayer">Singleplayer</button>
+          <button type="button" class="btn btn-outline" data-action="tutorial">Tutorial</button>
+          <button type="button" class="btn btn-ghost" data-action="quit">Quit to Hub</button>
+        </div>
+        <p class="controls">
+          <span>WASD move · Space jump/swim up · Shift sneak/swim down · hold Alt (or double-tap W) to sprint</span><br />
+          <span>Creative: double-tap Space or F to fly · Space/Shift = up/down while flying</span><br />
+          <span>E or Inventory button · search blocks · click to fill hotbar · C craft · Bucket RMB fluids</span>
+        </p>
+      </div>
+
+      <!-- State: SINGLEPLAYER -->
+      <div class="menu-panel" data-panel="SINGLEPLAYER" aria-hidden="true">
+        <div class="menu-title">Singleplayer</div>
+        <div class="hub-btns">
+          <button type="button" class="btn" data-action="create">Create New World</button>
+          <button type="button" class="btn btn-outline" data-action="continue" data-menu="btnContinue" id="btnContinue">
+            Continue Saved World
+          </button>
+          <button type="button" class="btn btn-ghost" data-action="main">Back</button>
+        </div>
+      </div>
+
+      <!-- State: WORLD_CREATE -->
+      <div class="menu-panel" data-panel="WORLD_CREATE" aria-hidden="true">
+        <div class="menu-title">Create World</div>
+        <div class="menu-card">
+          <div class="form-row">
+            <label for="worldName">World Name</label>
+            <input id="worldName" data-menu="worldName" type="text" value="New World" maxlength="32" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="worldSeed">Seed (blank = random)</label>
+            <input id="worldSeed" data-menu="worldSeed" type="text" placeholder="Leave empty for random" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="worldMode">Game Mode</label>
+            <select id="worldMode" data-menu="worldMode">
+              <option value="creative" selected>Creative</option>
+              <option value="survival">Survival</option>
+              <option value="adventure">Adventure</option>
+            </select>
+            <p class="form-hint">Adventure: cannot break/place unless the held item has CanBreak / CanPlaceOn tags.</p>
+          </div>
+          <div class="form-row">
+            <label for="worldGen">World Type</label>
+            <select id="worldGen" data-menu="worldGen">
+              <option value="superflat" selected>Superflat (flat ground)</option>
+              <option value="default">Default (biomes &amp; caves)</option>
+            </select>
+            <p class="form-hint">Start with Superflat if the world looked empty before. Default has biomes, hills, and caves.</p>
+          </div>
+          <div class="form-row">
+            <label for="worldDiff">Difficulty</label>
+            <select id="worldDiff" data-menu="worldDiff">
+              <option value="peaceful">Peaceful</option>
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div class="menu-actions">
+            <button type="button" class="btn btn-outline" data-action="singleplayer">Back</button>
+            <button type="button" class="btn" data-action="start-world">Create &amp; Play</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hud">
+      <div id="crosshair"></div>
+      <div id="stats">
+        <span>Pos</span> <span id="posHud">0 / 0 / 0</span><br />
+        <span>Seed</span> <span id="seedHud">—</span><br />
+        <span>Mode</span> <span id="flyHud">WALK</span><br />
+        <span>Tick</span> <span id="tickHud">0</span> <span>· 20 TPS</span><br />
+        <span>HP</span> <span id="hpHud">20 / 20</span><br />
+        <span>Food</span> <span id="hungerHud">20</span><br />
+        <span>FX</span> <span id="fxHud">—</span>
+      </div>
+      <div id="hint">Click the game to capture the mouse. Esc releases pointer lock.</div>
+      <div id="clickHint">Click to look around</div>
+      <div id="hotbar"></div>
+      <button type="button" id="invBtn" title="Open inventory (E)">Inventory</button>
+      <div id="invRoot"></div>
+    </div>
+  </div>
+
+  <!-- Local Three.js first (works offline / file://); CDN only as backup -->
+  <script src="minecraft/vendor/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="arthur-modes.js"></script>
+  <script src="arthur-shop.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="arthur-music.js"></script>
+
+  <script src="minecraft/data/blocks.js"></script>
+  <script src="minecraft/data/items.js"></script>
+  <script src="minecraft/data/enchantments.js"></script>
+  <script src="minecraft/data/recipes.js"></script>
+  <script src="minecraft/data/biomes.js"></script>
+  <script src="minecraft/data/structures.js"></script>
+  <script src="minecraft/src/client/TextureAtlas.js"></script>
+  <script src="minecraft/src/assets/AssetRegistry.js"></script>
+  <script src="minecraft/src/assets/TextureAtlasGenerator.js"></script>
+  <script src="minecraft/src/assets/MeshBuilder.js"></script>
+  <script src="minecraft/src/world/BlockRegistry.js"></script>
+  <script src="minecraft/src/items/ItemStack.js"></script>
+  <script src="minecraft/src/items/ItemRegistry.js"></script>
+  <script src="minecraft/src/items/Inventory.js"></script>
+  <script src="minecraft/src/items/RecipeRegistry.js"></script>
+  <script src="minecraft/src/items/CraftingResolver.js"></script>
+  <script src="minecraft/src/items/ContainerManager.js"></script>
+  <script src="minecraft/src/world/Noise.js"></script>
+  <script src="minecraft/src/world/Dimensions.js"></script>
+  <script src="minecraft/src/world/StructurePlacer.js"></script>
+  <script src="minecraft/src/world/NetherGen.js"></script>
+  <script src="minecraft/src/world/EndGen.js"></script>
+  <script src="minecraft/src/world/PortalTravel.js"></script>
+  <script src="minecraft/src/world/DimensionManager.js"></script>
+  <script src="minecraft/src/world/VoxelData.js"></script>
+  <script src="minecraft/src/world/WorldGen.js"></script>
+  <script src="minecraft/src/world/SuperflatGen.js"></script>
+  <script src="minecraft/src/world/Chunk.js"></script>
+  <script src="minecraft/src/world/serialize/CRC32.js"></script>
+  <script src="minecraft/src/world/serialize/Compression.js"></script>
+  <script src="minecraft/src/world/serialize/NBT.js"></script>
+  <script src="minecraft/src/world/serialize/RegionFile.js"></script>
+  <script src="minecraft/src/world/serialize/ChunkSerializer.js"></script>
+  <script src="minecraft/src/world/serialize/IndexedDBBackend.js"></script>
+  <script src="minecraft/src/world/serialize/RegionCompressor.js"></script>
+  <script src="minecraft/src/world/serialize/WorldStorage.js"></script>
+  <script src="minecraft/src/world/LightEngine.js"></script>
+  <script src="minecraft/src/world/ChunkWorkerPool.js"></script>
+  <script src="minecraft/src/world/World.js"></script>
+  <script src="minecraft/data/mobs.js"></script>
+  <script src="minecraft/src/ai/VoxelPathfinder.js"></script>
+  <script src="minecraft/src/ai/BehaviorTree.js"></script>
+  <script src="minecraft/src/ai/MobFSM.js"></script>
+  <script src="minecraft/src/entities/Mob.js"></script>
+  <script src="minecraft/src/client/MobRenderer.js"></script>
+  <script src="minecraft/src/ai/EntitySpawner.js"></script>
+  <script src="minecraft/src/ai/MobAIEngine.js"></script>
+  <script src="minecraft/data/status_effects.js"></script>
+  <script src="minecraft/src/combat/Attributes.js"></script>
+  <script src="minecraft/src/combat/StatusEffects.js"></script>
+  <script src="minecraft/src/combat/Hunger.js"></script>
+  <script src="minecraft/src/combat/SpawnManager.js"></script>
+  <script src="minecraft/src/combat/Combat.js"></script>
+  <script src="minecraft/src/physics/AABB.js"></script>
+  <script src="minecraft/src/physics/VoxelRaycast.js"></script>
+  <script src="minecraft/src/physics/BlockBreaker.js"></script>
+  <script src="minecraft/src/physics/Interaction.js"></script>
+  <script src="minecraft/src/entities/Player.js"></script>
+  <script src="minecraft/src/systems/RedstoneEngine.js"></script>
+  <script src="minecraft/src/systems/FluidEngine.js"></script>
+  <script src="minecraft/src/systems/SulfurDynamicsEngine.js"></script>
+  <script src="minecraft/src/systems/Systems.js"></script>
+  <script src="minecraft/src/client/Input.js"></script>
+  <script src="minecraft/src/client/InventoryUI.js"></script>
+  <script src="minecraft/src/client/Shaders.js"></script>
+  <script src="minecraft/src/client/PostProcessPipeline.js"></script>
+  <script src="minecraft/src/client/FrustumCuller.js"></script>
+  <script src="minecraft/src/fx/ParticlePool.js"></script>
+  <script src="minecraft/src/audio/AudioEngine.js"></script>
+  <script src="minecraft/src/audio/AudioManager.js"></script>
+  <script src="minecraft/src/client/MenuUI.js"></script>
+  <script src="minecraft/src/client/Renderer.js"></script>
+  <script src="minecraft/src/core/Time.js"></script>
+  <script src="minecraft/src/core/GameModes.js"></script>
+  <script src="minecraft/src/core/Difficulty.js"></script>
+  <script src="minecraft/src/core/WorldConfig.js"></script>
+  <script src="minecraft/src/core/GameState.js"></script>
+  <script src="minecraft/src/core/Game.js"></script>
+
+  <script>
+(function () {
+  var hub = document.getElementById('hub');
+  var hud = document.getElementById('hud');
+  var canvas = document.getElementById('game');
+  var game = null;
+
+  var gameState = new MC.GameState({
+    onEnterGame: function (config) {
+      startVoxelEngine(config);
+    },
+    onLeaveGame: function () {
+      if (game) {
+        game.stop();
+        game = null;
+      }
+      hud.classList.remove('on');
+      hub.classList.remove('menu-hidden');
+    },
+  });
+
+  var menuUI = new MC.MenuUI(hub, gameState, {
+    hasSave: false,
+    onTutorial: function () {
+      if (window.ArthurModes) {
+        ArthurModes.showTutorial('minecraft.html', function () {
+          gameState.showSingleplayer();
+        });
+      } else {
+        gameState.showSingleplayer();
+      }
+    },
+  });
+
+  /* Probe IndexedDB for a prior save (does not start the 3D loop). */
+  if (MC.IndexedDBBackend) {
+    var probe = new MC.IndexedDBBackend();
+    probe
+      .get('blockcraft/level.dat')
+      .then(function (buf) {
+        menuUI.setHasSave(!!buf);
+      })
+      .catch(function () {
+        menuUI.setHasSave(false);
+      });
+  }
+
+  function startVoxelEngine(config) {
+    if (typeof THREE === 'undefined') {
+      hub.classList.remove('menu-hidden');
+      alert('Blockcraft needs Three.js to draw the world. Check that minecraft/vendor/three.min.js exists, or allow the CDN.');
+      return;
+    }
+    hub.classList.add('menu-hidden');
+    hud.classList.add('on');
+    if (game) {
+      try {
+        game.stop();
+      } catch (e) {}
+      game = null;
+    }
+    try {
+      game = new MC.Game({
+        canvas: canvas,
+        worldConfig: config,
+        invRoot: document.getElementById('invRoot'),
+        hud: {
+          pos: document.getElementById('posHud'),
+          seed: document.getElementById('seedHud'),
+          fly: document.getElementById('flyHud'),
+          tick: document.getElementById('tickHud'),
+          hp: document.getElementById('hpHud'),
+          hunger: document.getElementById('hungerHud'),
+          effects: document.getElementById('fxHud'),
+          hotbar: document.getElementById('hotbar'),
+          invBtn: document.getElementById('invBtn'),
+        },
+      });
+      game.start();
+      canvas.focus();
+      if (game.input) game.input.requestLock();
+      var invBtn = document.getElementById('invBtn');
+      if (invBtn && !invBtn._bcBound) {
+        invBtn._bcBound = true;
+        invBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!game || !game._openInventory) return;
+          game._openInventory('inventory');
+        });
+      }
+    } catch (err) {
+      console.error('[Blockcraft] failed to start', err);
+      hub.classList.remove('menu-hidden');
+      hud.classList.remove('on');
+      alert('Could not start the world. Open the browser console (F12) for details.');
+    }
+  }
+
+  document.addEventListener('pointerlockchange', function () {
+    if (document.pointerLockElement === canvas) hud.classList.remove('need-lock');
+    else if (gameState.isMenu()) { /* stay on menu */ }
+    else hud.classList.add('need-lock');
+  });
+
+  if (window.ArthurModes) {
+    ArthurModes.boot({
+      hudEl: hud,
+      skipTutorial: true,
+      onPlay: function () {
+        gameState.showSingleplayer();
+      },
+      onTutorialStart: function () {
+        gameState.showSingleplayer();
+      },
+    });
+  }
+
+  if (window.ArthurMusic) {
+    /* Menu may use soft hub cue; in-game AudioManager owns sparse C418-style music */
+    try {
+      ArthurMusic.stop(false);
+    } catch (e) {}
+  }
+
+  window.addEventListener('arthur-lang', function () {
+    if (game) game.syncHud(true);
+  });
+
+  /* Expose for debugging */
+  window.MC_GameState = gameState;
+})();
+  </script>
+  <script src="arthur-i18n.js"></script>
+</body>
+</html>

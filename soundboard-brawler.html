@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Soundboard Brawler — Arthur Games</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0a0810;
+      color: #f0ecf8;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px 20px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffe8ff, #ff6a9a 30%, #5ad8ff 70%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      margin: 0 0 18px;
+      font-size: 0.88rem;
+      color: #9a92b0;
+      text-align: center;
+      max-width: 34rem;
+      line-height: 1.55;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    button.btn {
+      padding: 11px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 120, 200, 0.5);
+      background: linear-gradient(165deg, #281830 0%, #120c18 100%);
+      color: #ffe8f8;
+      font-family: inherit;
+    }
+    button.btn:hover { filter: brightness(1.12); border-color: #ff8ed8; }
+    button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.btn.secondary {
+      border-color: rgba(90, 220, 255, 0.45);
+      color: #d8f0ff;
+    }
+    .hud {
+      display: none;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.88rem;
+      color: #b0a8c8;
+    }
+    .hud.visible { display: flex; }
+    .hud strong { color: #ff8ed8; }
+    #hubPanel { max-width: 36rem; text-align: center; }
+    #playShell {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 980px;
+      position: relative;
+    }
+    #playShell.open { display: flex; }
+    .studio {
+      width: 100%;
+      max-width: 960px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 100, 180, 0.15) inset;
+      background: #100c18;
+    }
+    .seq-panel {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255, 120, 200, 0.2);
+    }
+    .seq-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .seq-head label {
+      font-size: 0.82rem;
+      color: #9a92b0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .seq-head input[type="range"] { width: 100px; accent-color: #ff8ed8; }
+    .seq-grid {
+      display: grid;
+      grid-template-columns: 88px repeat(16, 1fr);
+      gap: 4px;
+      align-items: center;
+    }
+    .track-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 6px 4px;
+      border-radius: 6px;
+      text-align: right;
+    }
+    .track-label.kick { color: #ff8a6a; }
+    .track-label.snare { color: #ffe86a; }
+    .track-label.hat { color: #8ae8ff; }
+    .track-label.bass { color: #9a7aff; }
+    .track-label.synth { color: #ff8ed8; }
+    .step-hdr {
+      font-size: 0.62rem;
+      color: #6a6480;
+      text-align: center;
+      padding: 2px 0;
+    }
+    button.step {
+      aspect-ratio: 1;
+      min-height: 28px;
+      border-radius: 6px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      background: rgba(30, 24, 40, 0.9);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.08s, border-color 0.08s;
+    }
+    button.step:hover { border-color: rgba(255, 140, 200, 0.5); }
+    button.step.on { border-color: rgba(255, 255, 255, 0.35); }
+    button.step.on.kick { background: linear-gradient(165deg, #ff6a50, #a03028); }
+    button.step.on.snare { background: linear-gradient(165deg, #ffe050, #b08020); }
+    button.step.on.hat { background: linear-gradient(165deg, #6ad8ff, #2080b0); }
+    button.step.on.bass { background: linear-gradient(165deg, #8a6aff, #4030a0); }
+    button.step.on.synth { background: linear-gradient(165deg, #ff8ed8, #a04090); }
+    button.step.playhead {
+      box-shadow: 0 0 0 2px #fff, 0 0 12px rgba(255, 255, 255, 0.45);
+    }
+    .studio-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+    .wrap {
+      position: relative;
+      line-height: 0;
+    }
+    #game {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0c0814;
+      touch-action: none;
+    }
+    .frame-tap-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      background: rgba(8, 4, 14, 0.92);
+      border: 1px solid rgba(255, 120, 200, 0.35);
+      color: #f0e8ff;
+      font-size: 1rem;
+      font-weight: 650;
+      text-align: center;
+      padding: 18px;
+      user-select: none;
+    }
+    .frame-tap-overlay.hidden { display: none !important; }
+    .frame-tap-overlay .small {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(200, 180, 220, 0.85);
+      max-width: 24rem;
+      line-height: 1.45;
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #6a6480;
+      text-align: center;
+      max-width: 34rem;
+      line-height: 1.45;
+    }
+    .level-select-title { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: #ff8ed8; }
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 0 0 16px;
+      text-align: left;
+    }
+    button.level-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 120, 200, 0.45);
+      background: linear-gradient(165deg, #281830 0%, #120c18 100%);
+      color: #ffe8f8;
+      font-family: inherit;
+      text-align: left;
+    }
+    button.level-btn:hover:not(:disabled) { filter: brightness(1.12); }
+    button.level-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.level-btn .num { font-size: 0.72rem; color: #ff8ed8; }
+    button.level-btn .tag { font-size: 0.68rem; color: #88eecc; }
+    button.level-btn .tag.locked { color: #6a6880; }
+    #levelSelectPanel.hidden { display: none !important; }
+    #playOverlays {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      pointer-events: none;
+    }
+    #playOverlays .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.88);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    #playOverlays .overlay.hidden { display: none !important; pointer-events: none; }
+    .overlay-inner { text-align: center; max-width: 28rem; line-height: 1.55; }
+    .overlay-inner .big { font-size: 1.25rem; font-weight: 800; color: #ff8ed8; margin: 0 0 10px; }
+    .overlay-inner p { margin: 0 0 14px; color: #b0a8c8; }
+    .judge-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+    .judge-card {
+      min-width: 140px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 120, 200, 0.35);
+      background: rgba(40, 24, 48, 0.9);
+      text-align: left;
+    }
+    .judge-card .name { font-weight: 700; color: #ff8ed8; font-size: 0.9rem; }
+    .judge-card .score { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 6px 0; }
+    .judge-card .quote { font-size: 0.78rem; color: #9a92b0; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="hubPanel">
+    <div id="hubMain">
+      <h1>Soundboard Brawler</h1>
+      <p class="sub">
+        A <strong>beat battle</strong> for the judges. Paint a 16-step loop on the soundboard — kick, snare, hats, bass, synth —
+        then <strong>present your mix</strong>. Three judges score groove, variety, and energy. Win the crowd to unlock bigger venues.
+      </p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="btnPlay">Play</button>
+        <button type="button" class="btn" id="btnShows">Venue select</button>
+      </div>
+      <p class="hint" id="progressHint"></p>
+    </div>
+    <div id="levelSelectPanel" class="hidden" aria-hidden="true">
+      <p class="level-select-title">Choose a venue</p>
+      <div class="level-grid" id="levelGrid"></div>
+      <button type="button" class="btn" id="btnBackHub">Back</button>
+    </div>
+  </div>
+
+  <div id="playShell">
+    <div class="hud" id="hud">
+      <span>Venue <strong id="venueEl">1</strong> / <strong id="totalEl">5</strong></span>
+      <span>Phase <strong id="phaseEl">Compose</strong></span>
+      <span>BPM <strong id="bpmHud">110</strong></span>
+      <span>Need <strong id="needEl">8+</strong> hits</span>
+    </div>
+    <div class="studio">
+      <div class="seq-panel" id="seqPanel">
+        <div class="seq-head">
+          <span style="font-weight:700;color:#ff8ed8">Your loop</span>
+          <label>
+            BPM
+            <input type="range" id="bpmSlider" min="80" max="150" value="110" />
+            <strong id="bpmLabel">110</strong>
+          </label>
+        </div>
+        <div class="seq-grid" id="seqGrid"></div>
+        <div class="studio-actions">
+          <button type="button" class="btn secondary" id="btnPreview">Preview loop</button>
+          <button type="button" class="btn secondary" id="btnStarter">Load starter beat</button>
+          <button type="button" class="btn" id="btnPresent">Present to judges</button>
+          <button type="button" class="btn secondary" id="btnClear">Clear pattern</button>
+        </div>
+      </div>
+      <div class="wrap">
+        <canvas id="game" width="960" height="280" tabindex="0" aria-label="Soundboard stage"></canvas>
+        <div class="frame-tap-overlay" id="tapOverlay" role="button" tabindex="0">
+          <span>Click to wake up the speakers</span>
+          <span class="small">Tap steps to toggle sounds · Preview your beat · Present when you have 8+ notes</span>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Judges score 1–10 each (30 max). Pass when your <strong>combined total</strong> hits the venue target — kick + snare on the backbeat is a solid start.</p>
+    <div id="playOverlays">
+      <div class="overlay hidden" id="winOverlay" aria-hidden="true">
+        <div class="overlay-inner">
+          <p class="big" id="winTitle">Judges loved it!</p>
+          <p id="winMsg"></p>
+          <div class="judge-scores" id="winJudgeScores"></div>
+          <p id="winTotal"></p>
+          <button type="button" class="btn" id="btnNext">Next venue</button>
+          <button type="button" class="btn" id="btnWinMenu" style="margin-left:8px">Menu</button>
+        </div>
+      </div>
+      <div class="overlay hidden" id="loseOverlay" aria-hidden="true">
+        <div class="overlay-inner">
+          <p class="big">Tough crowd…</p>
+          <p id="loseMsg"></p>
+          <div class="judge-scores" id="loseJudgeScores"></div>
+          <p id="loseTotal"></p>
+          <button type="button" class="btn" id="btnRetry">Revise & retry</button>
+          <button type="button" class="btn" id="btnLoseMenu" style="margin-left:8px">Menu</button>
+        </div>
+      </div>
+      <div class="overlay hidden" id="doneOverlay" aria-hidden="true">
+        <div class="overlay-inner">
+          <p class="big">Headliner</p>
+          <p id="doneMsg"></p>
+          <button type="button" class="btn" id="btnDoneMenu">Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="arthur-shop.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="arthur-modes.js"></script>
+  <script src="arthur-music.js"></script>
+  <script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const STEPS = 16;
+  const TRACKS = [
+    { id: 'kick', label: 'KICK', cls: 'kick' },
+    { id: 'snare', label: 'SNARE', cls: 'snare' },
+    { id: 'hat', label: 'HI-HAT', cls: 'hat' },
+    { id: 'bass', label: 'BASS', cls: 'bass' },
+    { id: 'synth', label: 'SYNTH', cls: 'synth' },
+  ];
+  const LS_PROGRESS = 'soundboardBrawlerProgress';
+
+  const JUDGES = [
+    { name: 'DJ Kicks', focus: 'kick', quoteGood: 'That kick punches through the subs!', quoteBad: 'Where is the foundation?' },
+    { name: 'Lady Snare', focus: 'snare', quoteGood: 'Snare cracks on point.', quoteBad: 'Needs more backbeat.' },
+    { name: 'Professor Hat', focus: 'hat', quoteGood: 'Shimmer and shuffle — delicious.', quoteBad: 'Too dry on the hats.' },
+  ];
+
+  const SHOWS = [
+    { name: 'Open mic', bpm: 92, minScore: 15, minNotes: 6, hint: 'Kick on 1 & 9, snare on 5 & 13, hi-hats on 3 & 11 — tap Load starter beat.' },
+    { name: 'Club basement', bpm: 108, minScore: 18, minNotes: 8, hint: 'Add hi-hats every other step for shuffle. Use all three drums.' },
+    { name: 'Warehouse rave', bpm: 124, minScore: 21, minNotes: 10, hint: 'Layer bass with the kick on downbeats — judges love low end.' },
+    { name: 'Festival tent', bpm: 118, minScore: 24, minNotes: 12, hint: 'Use all five tracks at least once. Keep the backbeat snare steady.' },
+    { name: 'Main stage', bpm: 132, minScore: 27, minNotes: 14, hint: 'Syncopation wins — sprinkle notes on the off-beats, not only downbeats.' },
+  ];
+
+  /** Step indices (0-based) for each venue's passing starter loop. */
+  const STARTER_BEATS = [
+    { kick: [0, 8], snare: [4, 12], hat: [2, 10], bass: [], synth: [] },
+    { kick: [0, 8], snare: [4, 12], hat: [1, 3, 5, 7, 9, 11, 13, 15], bass: [], synth: [] },
+    { kick: [0, 4, 8, 12], snare: [4, 12], hat: [2, 6, 10, 14], bass: [0, 8], synth: [] },
+    { kick: [0, 4, 8, 12], snare: [4, 12], hat: [1, 3, 5, 7, 9, 11, 13, 15], bass: [0, 8], synth: [2, 6] },
+    { kick: [0, 3, 8, 11], snare: [4, 12], hat: [1, 5, 7, 9, 13, 15], bass: [0, 6, 8, 14], synth: [2, 10, 14] },
+  ];
+
+  const hubPanel = document.getElementById('hubPanel');
+  const playShell = document.getElementById('playShell');
+  const hud = document.getElementById('hud');
+  const tapOverlay = document.getElementById('tapOverlay');
+  const seqGrid = document.getElementById('seqGrid');
+  const seqPanel = document.getElementById('seqPanel');
+  const bpmSlider = document.getElementById('bpmSlider');
+  const bpmLabel = document.getElementById('bpmLabel');
+  const bpmHud = document.getElementById('bpmHud');
+  const venueEl = document.getElementById('venueEl');
+  const totalEl = document.getElementById('totalEl');
+  const phaseEl = document.getElementById('phaseEl');
+  const needEl = document.getElementById('needEl');
+  const btnPreview = document.getElementById('btnPreview');
+  const btnStarter = document.getElementById('btnStarter');
+  const btnPresent = document.getElementById('btnPresent');
+  const btnClear = document.getElementById('btnClear');
+  const progressHint = document.getElementById('progressHint');
+  const winOverlay = document.getElementById('winOverlay');
+  const loseOverlay = document.getElementById('loseOverlay');
+  const doneOverlay = document.getElementById('doneOverlay');
+  const winTitle = document.getElementById('winTitle');
+  const winMsg = document.getElementById('winMsg');
+  const winJudgeScores = document.getElementById('winJudgeScores');
+  const winTotal = document.getElementById('winTotal');
+  const loseMsg = document.getElementById('loseMsg');
+  const loseJudgeScores = document.getElementById('loseJudgeScores');
+  const loseTotal = document.getElementById('loseTotal');
+  const doneMsg = document.getElementById('doneMsg');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnShows = document.getElementById('btnShows');
+  const btnBackHub = document.getElementById('btnBackHub');
+  const hubMain = document.getElementById('hubMain');
+  const levelSelectPanel = document.getElementById('levelSelectPanel');
+  const levelGrid = document.getElementById('levelGrid');
+  const btnNext = document.getElementById('btnNext');
+  const btnRetry = document.getElementById('btnRetry');
+  const btnWinMenu = document.getElementById('btnWinMenu');
+  const btnLoseMenu = document.getElementById('btnLoseMenu');
+  const btnDoneMenu = document.getElementById('btnDoneMenu');
+
+  totalEl.textContent = String(SHOWS.length);
+
+  let progress = parseInt(localStorage.getItem(LS_PROGRESS) || '0', 10) || 0;
+  let showIndex = 0;
+  let endlessLap = 0;
+  let showHint = '';
+  let bpm = 110;
+  let phase = 'compose';
+  let pattern = [];
+  let stepButtons = [];
+  let playhead = 0;
+  let playing = false;
+  let previewing = false;
+  let judging = false;
+  let judgeT = 0;
+  let judgeResults = [];
+  let judgeReveal = 0;
+  let judgingDone = false;
+  let needsFocus = true;
+  let audioCtx = null;
+  let masterGain = null;
+  let previewTimer = null;
+  let eqBars = [];
+  let flashMsg = '';
+  let flashT = 0;
+  let lastT = performance.now();
+  let rafId = 0;
+
+  function initPattern() {
+    pattern = [];
+    let t;
+    let s;
+    for (t = 0; t < TRACKS.length; t++) {
+      pattern[t] = [];
+      for (s = 0; s < STEPS; s++) pattern[t][s] = false;
+    }
+  }
+  initPattern();
+
+  function beatSec() {
+    return 60 / bpm;
+  }
+
+  function noteCount() {
+    let n = 0;
+    let t;
+    let s;
+    for (t = 0; t < TRACKS.length; t++) {
+      for (s = 0; s < STEPS; s++) if (pattern[t][s]) n++;
+    }
+    return n;
+  }
+
+  function syncNeedHud() {
+    const show = SHOWS[showIndex];
+    needEl.textContent = String(show.minNotes) + '+';
+    btnPresent.disabled = noteCount() < show.minNotes;
+  }
+
+  function applyPatternToGrid() {
+    let t;
+    let s;
+    for (t = 0; t < TRACKS.length; t++) {
+      for (s = 0; s < STEPS; s++) {
+        if (stepButtons[t] && stepButtons[t][s]) {
+          stepButtons[t][s].classList.toggle('on', pattern[t][s]);
+        }
+      }
+    }
+    syncNeedHud();
+  }
+
+  function loadStarterBeat(silent) {
+    if (phase !== 'compose' || previewing) return;
+    const starter = STARTER_BEATS[showIndex] || STARTER_BEATS[0];
+    initPattern();
+    const trackIds = ['kick', 'snare', 'hat', 'bass', 'synth'];
+    let ti;
+    for (ti = 0; ti < trackIds.length; ti++) {
+      const steps = starter[trackIds[ti]] || [];
+      let si;
+      for (si = 0; si < steps.length; si++) {
+        const step = steps[si];
+        if (step >= 0 && step < STEPS) pattern[ti][step] = true;
+      }
+    }
+    applyPatternToGrid();
+    if (!silent) {
+      flashMsg = 'Starter beat loaded — preview it, then present';
+      flashT = 2.5;
+    }
+  }
+
+  function buildSeqGrid() {
+    seqGrid.innerHTML = '';
+    stepButtons = [];
+    let hdr = document.createElement('div');
+    hdr.className = 'step-hdr';
+    hdr.textContent = '';
+    seqGrid.appendChild(hdr);
+    let s;
+    for (s = 0; s < STEPS; s++) {
+      hdr = document.createElement('div');
+      hdr.className = 'step-hdr';
+      hdr.textContent = String(s + 1);
+      seqGrid.appendChild(hdr);
+    }
+    let t;
+    for (t = 0; t < TRACKS.length; t++) {
+      const tr = TRACKS[t];
+      const lab = document.createElement('div');
+      lab.className = 'track-label ' + tr.cls;
+      lab.textContent = tr.label;
+      seqGrid.appendChild(lab);
+      const row = [];
+      for (s = 0; s < STEPS; s++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'step ' + tr.cls;
+        btn.setAttribute('aria-label', tr.label + ' step ' + (s + 1));
+        (function (ti, si, b) {
+          b.addEventListener('click', function () {
+            if (phase !== 'compose' || previewing) return;
+            pattern[ti][si] = !pattern[ti][si];
+            b.classList.toggle('on', pattern[ti][si]);
+            syncNeedHud();
+            playStepSound(ti, audioCtx ? audioCtx.currentTime + 0.02 : 0);
+          });
+        })(t, s, btn);
+        seqGrid.appendChild(btn);
+        row.push(btn);
+      }
+      stepButtons.push(row);
+    }
+  }
+  buildSeqGrid();
+
+  function setPlayhead(step) {
+    playhead = step;
+    let t;
+    let s;
+    for (t = 0; t < stepButtons.length; t++) {
+      for (s = 0; s < STEPS; s++) {
+        stepButtons[t][s].classList.toggle('playhead', step >= 0 && s === playhead);
+      }
+    }
+  }
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.6;
+    masterGain.connect(audioCtx.destination);
+    let i;
+    for (i = 0; i < 32; i++) eqBars[i] = 0.1;
+  }
+
+  function playKick(t) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+    g.gain.setValueAtTime(0.85, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    o.connect(g);
+    g.connect(masterGain);
+    o.start(t);
+    o.stop(t + 0.28);
+    bumpEq(0, 1);
+  }
+
+  function playSnare(t) {
+    if (!audioCtx) return;
+    const len = Math.floor(audioCtx.sampleRate * 0.1);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    let i;
+    for (i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const g = audioCtx.createGain();
+    g.gain.value = 0.4;
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.value = 900;
+    src.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+    src.start(t);
+    src.stop(t + 0.1);
+    bumpEq(0.35, 0.55);
+  }
+
+  function playHat(t) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'square';
+    o.frequency.value = 9000;
+    g.gain.setValueAtTime(0.07, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.value = 5000;
+    o.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+    o.start(t);
+    o.stop(t + 0.04);
+    bumpEq(0.7, 0.35);
+  }
+
+  function playBass(t) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'triangle';
+    o.frequency.value = 48;
+    g.gain.setValueAtTime(0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(g);
+    g.connect(masterGain);
+    o.start(t);
+    o.stop(t + 0.22);
+    bumpEq(0.12, 0.75);
+  }
+
+  function playSynth(t) {
+    if (!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 220 + (showIndex * 15) % 180;
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    o.connect(g);
+    g.connect(masterGain);
+    o.start(t);
+    o.stop(t + 0.2);
+    bumpEq(0.5, 0.5);
+  }
+
+  function bumpEq(lowW, highW) {
+    let i;
+    for (i = 0; i < eqBars.length; i++) {
+      const target = i < eqBars.length * 0.4 ? lowW : highW;
+      eqBars[i] = Math.min(1, eqBars[i] * 0.7 + target * 0.55 + Math.random() * 0.08);
+    }
+  }
+
+  function playStepSound(trackIdx, t) {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (trackIdx === 0) playKick(t);
+    else if (trackIdx === 1) playSnare(t);
+    else if (trackIdx === 2) playHat(t);
+    else if (trackIdx === 3) playBass(t);
+    else playSynth(t);
+  }
+
+  function playStepAt(step) {
+    const t = audioCtx.currentTime;
+    let tr;
+    for (tr = 0; tr < TRACKS.length; tr++) {
+      if (pattern[tr][step]) playStepSound(tr, t);
+    }
+  }
+
+  function stopPreview() {
+    if (previewTimer) {
+      clearTimeout(previewTimer);
+      previewTimer = null;
+    }
+    previewing = false;
+    phase = 'compose';
+    phaseEl.textContent = 'Compose';
+    setPlayhead(-1);
+    seqPanel.style.opacity = '1';
+    btnPreview.textContent = 'Preview loop';
+    btnPresent.disabled = noteCount() < SHOWS[showIndex].minNotes;
+  }
+
+  function runPreview() {
+    if (previewing) {
+      stopPreview();
+      return;
+    }
+    initAudio();
+    if (noteCount() < 1) {
+      flashMsg = 'Paint some steps first';
+      flashT = 1.5;
+      return;
+    }
+    previewing = true;
+    phase = 'preview';
+    phaseEl.textContent = 'Preview';
+    btnPreview.textContent = 'Stop preview';
+    btnPresent.disabled = true;
+    seqPanel.style.opacity = '0.92';
+    let step = 0;
+    const bs = beatSec() * 1000;
+    function tick() {
+      if (!previewing) return;
+      setPlayhead(step);
+      playStepAt(step);
+      step++;
+      if (step >= STEPS) {
+        stopPreview();
+        flashMsg = 'Loop done — present it!';
+        flashT = 2;
+        return;
+      }
+      previewTimer = setTimeout(tick, bs);
+    }
+    tick();
+  }
+
+  function analyzePattern() {
+    const notes = noteCount();
+    const perTrack = [];
+    let t;
+    for (t = 0; t < TRACKS.length; t++) {
+      let c = 0;
+      let s;
+      for (s = 0; s < STEPS; s++) if (pattern[t][s]) c++;
+      perTrack[t] = c;
+    }
+    let backbeats = 0;
+    if (pattern[1][4]) backbeats++;
+    if (pattern[1][12]) backbeats++;
+    for (s = 0; s < STEPS; s++) {
+      if (pattern[1][s] && s !== 4 && s !== 12) backbeats += 0.25;
+    }
+    let syncopation = 0;
+    for (t = 0; t < TRACKS.length; t++) {
+      for (s = 0; s < STEPS; s++) {
+        if (pattern[t][s] && s % 2 === 1) syncopation++;
+      }
+    }
+    const tracksUsed = perTrack.filter(function (c) {
+      return c > 0;
+    }).length;
+    const kickOnOne = pattern[0][0] ? 1 : 0;
+    const density = notes / (STEPS * TRACKS.length);
+    return {
+      notes: notes,
+      perTrack: perTrack,
+      backbeats: backbeats,
+      syncopation: syncopation,
+      tracksUsed: tracksUsed,
+      kickOnOne: kickOnOne,
+      density: density,
+    };
+  }
+
+  function scoreJudge(judge, stats, show) {
+    const focusIdx = TRACKS.findIndex(function (tr) {
+      return tr.id === judge.focus;
+    });
+    const focusHits = focusIdx >= 0 ? stats.perTrack[focusIdx] : 0;
+    let score = 5;
+    score += Math.min(3.5, focusHits * 0.65);
+    score += Math.min(2, stats.tracksUsed * 0.5);
+    score += Math.min(2, stats.syncopation * 0.18);
+    score += stats.kickOnOne ? 0.6 : 0;
+    score += Math.min(1.5, stats.backbeats * 0.5);
+    score += Math.min(1.2, stats.density * 6);
+    if (stats.notes < show.minNotes) score *= 0.5;
+    score += (Math.random() - 0.5) * 0.8;
+    return Math.max(1, Math.min(10, Math.round(score * 10) / 10));
+  }
+
+  function judgeQuotes(judge, sc, stats) {
+    if (sc >= 7.5) return judge.quoteGood;
+    if (sc >= 5.5) return 'Solid idea — could use more ' + judge.focus + '.';
+    if (stats.notes < SHOWS[showIndex].minNotes) return 'Is that a loop or a nap?';
+    return judge.quoteBad;
+  }
+
+  function startJudging() {
+    const show = SHOWS[showIndex];
+    if (noteCount() < show.minNotes) {
+      flashMsg = 'Need ' + show.minNotes + '+ notes to perform';
+      flashT = 2;
+      return;
+    }
+    stopPreview();
+    initAudio();
+    judging = true;
+    judgingDone = false;
+    phase = 'judges';
+    phaseEl.textContent = 'Judges';
+    judgeT = 0;
+    judgeReveal = 0;
+    judgeResults = [];
+    flashMsg = 'Performing for the judges…';
+    flashT = 99;
+    let step = 0;
+    const bs = beatSec() * 1000;
+    function perfTick() {
+      if (!judging || phase !== 'judges') return;
+      if (step < STEPS * 2) {
+        setPlayhead(step % STEPS);
+        playStepAt(step % STEPS);
+        step++;
+        previewTimer = setTimeout(perfTick, bs);
+        return;
+      }
+      const stats = analyzePattern();
+      let j;
+      for (j = 0; j < JUDGES.length; j++) {
+        const sc = scoreJudge(JUDGES[j], stats, show);
+        judgeResults.push({
+          name: JUDGES[j].name,
+          score: sc,
+          quote: judgeQuotes(JUDGES[j], sc, stats),
+        });
+      }
+      judgeReveal = 0;
+      judgeT = 0;
+      flashMsg = 'Scores incoming…';
+    }
+    perfTick();
+  }
+
+  function renderJudgeCards(container, results) {
+    container.innerHTML = '';
+    let i;
+    for (i = 0; i < results.length; i++) {
+      const r = results[i];
+      const card = document.createElement('div');
+      card.className = 'judge-card';
+      card.innerHTML =
+        '<div class="name">' +
+        r.name +
+        '</div><div class="score">' +
+        r.score.toFixed(1) +
+        '/10</div><div class="quote">' +
+        r.quote +
+        '</div>';
+      container.appendChild(card);
+    }
+  }
+
+  function finishJudging() {
+    if (judgingDone) return;
+    judgingDone = true;
+    judging = false;
+    const show = SHOWS[showIndex];
+    let total = 0;
+    let i;
+    for (i = 0; i < judgeResults.length; i++) total += judgeResults[i].score;
+    const avg = total / judgeResults.length;
+    const maxTotal = JUDGES.length * 10;
+    const passed = total >= show.minScore;
+    const totalStr =
+      'Total ' +
+      total.toFixed(1) +
+      ' / ' +
+      maxTotal +
+      ' (avg ' +
+      avg.toFixed(1) +
+      ') · Need ' +
+      show.minScore +
+      '+';
+
+    if (passed) {
+      if (window.ArthurModes && ArthurModes.isEndless()) {
+        hideOverlays();
+        endlessLap++;
+        startShowAt((showIndex + 1) % SHOWS.length);
+        ArthurModes.updateEndlessHud(hud, 'lap ' + endlessLap);
+        flashMsg = 'Endless — next venue!';
+        flashT = 2;
+        return;
+      }
+      if (showIndex + 1 > progress) {
+        progress = showIndex + 1;
+        localStorage.setItem(LS_PROGRESS, String(progress));
+      }
+      syncProgressHint();
+      winTitle.textContent = show.name + ' — they felt it!';
+      winMsg.textContent = show.hint;
+      renderJudgeCards(winJudgeScores, judgeResults);
+      winTotal.textContent = totalStr;
+      winOverlay.classList.remove('hidden');
+      winOverlay.setAttribute('aria-hidden', 'false');
+    } else {
+      loseMsg.textContent = 'Revise your pattern and try again. ' + show.hint;
+      renderJudgeCards(loseJudgeScores, judgeResults);
+      loseTotal.textContent = totalStr;
+      loseOverlay.classList.remove('hidden');
+      loseOverlay.setAttribute('aria-hidden', 'false');
+    }
+    phase = 'compose';
+    phaseEl.textContent = 'Compose';
+    flashMsg = '';
+    flashT = 0;
+    setPlayhead(-1);
+    syncNeedHud();
+  }
+
+  function isShowUnlocked(idx) {
+    return idx <= progress;
+  }
+
+  function syncProgressHint() {
+    const unlocked = Math.min(progress + 1, SHOWS.length);
+    progressHint.textContent =
+      progress >= SHOWS.length
+        ? 'All venues cleared — chase a perfect 10 from every judge.'
+        : unlocked + ' of ' + SHOWS.length + ' venues unlocked.';
+    if (btnPlay) {
+      btnPlay.textContent =
+        progress > 0 && progress < SHOWS.length
+          ? 'Continue'
+          : progress >= SHOWS.length
+            ? 'Play again'
+            : 'Play';
+    }
+  }
+
+  function rebuildLevelGrid() {
+    if (!levelGrid) return;
+    levelGrid.innerHTML = '';
+    let i;
+    for (i = 0; i < SHOWS.length; i++) {
+      const S = SHOWS[i];
+      const unlocked = isShowUnlocked(i);
+      const beaten = i < progress;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'level-btn';
+      btn.disabled = !unlocked;
+      btn.innerHTML =
+        '<span class="num">Venue ' +
+        (i + 1) +
+        '</span><span>' +
+        S.name +
+        '</span><span class="tag">' +
+        S.minScore +
+        '+ total</span>' +
+        (beaten ? '<span class="tag">Clear</span>' : unlocked ? '' : '<span class="tag locked">Locked</span>');
+      (function (idx) {
+        btn.addEventListener('click', function () {
+          startShowAt(idx);
+        });
+      })(i);
+      levelGrid.appendChild(btn);
+    }
+  }
+
+  function showLevelSelect() {
+    if (hubMain) hubMain.style.display = 'none';
+    if (levelSelectPanel) {
+      levelSelectPanel.classList.remove('hidden');
+      levelSelectPanel.setAttribute('aria-hidden', 'false');
+    }
+    rebuildLevelGrid();
+  }
+
+  function hideLevelSelect() {
+    if (hubMain) hubMain.style.display = 'block';
+    if (levelSelectPanel) {
+      levelSelectPanel.classList.add('hidden');
+      levelSelectPanel.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function hideOverlays() {
+    winOverlay.classList.add('hidden');
+    winOverlay.setAttribute('aria-hidden', 'true');
+    loseOverlay.classList.add('hidden');
+    loseOverlay.setAttribute('aria-hidden', 'true');
+    doneOverlay.classList.add('hidden');
+    doneOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function loadShow(idx) {
+    showIndex = idx;
+    const S = SHOWS[idx];
+    showHint = S.hint || '';
+    bpm = S.bpm;
+    bpmSlider.value = String(bpm);
+    bpmLabel.textContent = String(bpm);
+    bpmHud.textContent = String(bpm);
+    venueEl.textContent = String(idx + 1);
+    initPattern();
+    let t;
+    let s;
+    for (t = 0; t < stepButtons.length; t++) {
+      for (s = 0; s < STEPS; s++) {
+        if (stepButtons[t][s]) {
+          stepButtons[t][s].classList.remove('on', 'playhead');
+          pattern[t][s] = false;
+        }
+      }
+    }
+    syncNeedHud();
+    loadStarterBeat(true);
+    flashMsg = S.hint;
+    flashT = 3;
+  }
+
+  function enterHub() {
+    playing = false;
+    judging = false;
+    stopPreview();
+    hubPanel.style.display = 'block';
+    hideLevelSelect();
+    playShell.classList.remove('open');
+    hud.classList.remove('visible');
+    hideOverlays();
+    syncProgressHint();
+    armTap();
+  }
+
+  function startShowAt(idx) {
+    hideLevelSelect();
+    hubPanel.style.display = 'none';
+    playShell.classList.add('open');
+    hud.classList.add('visible');
+    hideOverlays();
+    playing = true;
+    phase = 'compose';
+    phaseEl.textContent = 'Compose';
+    loadShow(idx);
+    armTap();
+    lastT = performance.now();
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  function disarmTap() {
+    if (tapOverlay) tapOverlay.classList.add('hidden');
+    needsFocus = false;
+    initAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function armTap() {
+    needsFocus = true;
+    if (tapOverlay) tapOverlay.classList.remove('hidden');
+  }
+
+  function drawStage(dt) {
+    ctx.fillStyle = '#0c0814';
+    ctx.fillRect(0, 0, W, H);
+
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#1a1028');
+    g.addColorStop(1, '#08060c');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    let i;
+    const barW = W / 40;
+    for (i = 0; i < 40; i++) {
+      const h = (eqBars[i] || 0.08) * (H - 40);
+      const x = i * barW + 2;
+      ctx.fillStyle = 'hsl(' + (280 + i * 3) + ', 70%, ' + (35 + (eqBars[i] || 0) * 35) + '%)';
+      ctx.fillRect(x, H - h, barW - 3, h);
+    }
+
+    if (phase === 'judges' && judgeResults.length) {
+      const reveal = Math.min(JUDGES.length, Math.floor(judgeT / 1.4));
+      let j;
+      for (j = 0; j < reveal; j++) {
+        const r = judgeResults[j];
+        const jx = 80 + j * 280;
+        const jy = 60;
+        ctx.fillStyle = 'rgba(40, 24, 48, 0.92)';
+        ctx.fillRect(jx, jy, 240, 100);
+        ctx.strokeStyle = '#ff8ed8';
+        ctx.strokeRect(jx + 0.5, jy + 0.5, 239, 99);
+        ctx.fillStyle = '#ff8ed8';
+        ctx.font = '700 14px system-ui,sans-serif';
+        ctx.fillText(r.name, jx + 12, jy + 24);
+        ctx.fillStyle = '#fff';
+        ctx.font = '800 32px system-ui,sans-serif';
+        ctx.fillText(r.score.toFixed(1), jx + 12, jy + 48);
+        ctx.fillStyle = '#9a92b0';
+        ctx.font = '500 11px system-ui,sans-serif';
+        const words = r.quote.split(' ');
+        let line = '';
+        let ly = jy + 78;
+        let wi;
+        for (wi = 0; wi < words.length; wi++) {
+          const test = line ? line + ' ' + words[wi] : words[wi];
+          if (ctx.measureText(test).width > 210 && line) {
+            ctx.fillText(line, jx + 12, ly);
+            line = words[wi];
+            ly += 14;
+          } else line = test;
+        }
+        if (line) ctx.fillText(line, jx + 12, ly);
+      }
+      if (reveal >= JUDGES.length && judgeT > JUDGES.length * 1.4 + 0.5) {
+        finishJudging();
+      }
+    }
+
+    if (flashT > 0 && flashMsg) {
+      ctx.font = '600 15px system-ui,sans-serif';
+      ctx.fillStyle = 'rgba(255, 220, 240, ' + Math.min(1, flashT) + ')';
+      ctx.textAlign = 'center';
+      ctx.fillText(flashMsg, W * 0.5, H - 18);
+      ctx.textAlign = 'left';
+    }
+
+    let k;
+    for (k = 0; k < eqBars.length; k++) eqBars[k] *= 0.92;
+  }
+
+  function tick(now) {
+    rafId = requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    if (!playing) {
+      drawHub();
+      return;
+    }
+    if (judging && phase === 'judges') {
+      judgeT += dt;
+    }
+    if (flashT > 0) flashT -= dt;
+    drawStage(dt);
+  }
+
+  function drawHub() {
+    ctx.fillStyle = '#100c18';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ff8ed8';
+    ctx.font = '700 16px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Soundboard Brawler — Beat Battle', W * 0.5, H * 0.42);
+    ctx.fillStyle = '#9a92b0';
+    ctx.font = '500 13px system-ui,sans-serif';
+    ctx.fillText('Compose · Present · Get scored', W * 0.5, H * 0.52);
+    ctx.textAlign = 'left';
+  }
+
+  syncProgressHint();
+  rebuildLevelGrid();
+
+  bpmSlider.addEventListener('input', function () {
+    bpm = parseInt(bpmSlider.value, 10) || 110;
+    bpmLabel.textContent = String(bpm);
+    bpmHud.textContent = String(bpm);
+  });
+
+  btnPreview.addEventListener('click', function () {
+    disarmTap();
+    runPreview();
+  });
+
+  if (btnStarter) {
+    btnStarter.addEventListener('click', function () {
+      disarmTap();
+      loadStarterBeat();
+    });
+  }
+
+  btnPresent.addEventListener('click', function () {
+    disarmTap();
+    startJudging();
+  });
+
+  btnClear.addEventListener('click', function () {
+    if (phase !== 'compose' || previewing) return;
+    initPattern();
+    let t;
+    let s;
+    for (t = 0; t < TRACKS.length; t++) {
+      for (s = 0; s < STEPS; s++) stepButtons[t][s].classList.remove('on');
+    }
+    syncNeedHud();
+    flashMsg = 'Pattern cleared';
+    flashT = 1.2;
+  });
+
+  tapOverlay.addEventListener('click', disarmTap);
+  btnPlay.addEventListener('click', function () {
+    startShowAt(Math.min(progress, SHOWS.length - 1));
+  });
+  if (btnShows) btnShows.addEventListener('click', showLevelSelect);
+  if (btnBackHub) btnBackHub.addEventListener('click', hideLevelSelect);
+  btnNext.addEventListener('click', function () {
+    hideOverlays();
+    if (showIndex >= SHOWS.length - 1) {
+      doneMsg.textContent = 'You headlined every venue. The judges want an encore.';
+      doneOverlay.classList.remove('hidden');
+      doneOverlay.setAttribute('aria-hidden', 'false');
+      enterHub();
+    } else {
+      startShowAt(showIndex + 1);
+    }
+  });
+  btnRetry.addEventListener('click', function () {
+    hideOverlays();
+    phase = 'compose';
+    phaseEl.textContent = 'Compose';
+    judging = false;
+    stopPreview();
+    setPlayhead(-1);
+    syncNeedHud();
+    flashMsg = 'Tweak your loop and present again';
+    flashT = 2.5;
+    disarmTap();
+  });
+  btnWinMenu.addEventListener('click', enterHub);
+  btnLoseMenu.addEventListener('click', enterHub);
+  btnDoneMenu.addEventListener('click', enterHub);
+
+  drawHub();
+  rafId = requestAnimationFrame(tick);
+
+  if (window.ArthurModes) {
+    ArthurModes.boot({
+      hudEl: hud,
+      onPlay: function () {
+        btnPlay.click();
+      },
+      onTutorial: function () {
+        ArthurModes.showTutorial(ArthurModes.gameId(), function () {
+          btnPlay.click();
+        });
+      },
+      onEndless: function () {
+        window.__arthurEndless = true;
+        ArthurModes.markEndlessSession();
+        endlessLap = 0;
+        btnPlay.click();
+      },
+      onTutorialStart: function () {
+        btnPlay.click();
+      },
+    });
+  }
+})();
+  </script>
+<script src="arthur-i18n.js"></script>
+</body>
+</html>

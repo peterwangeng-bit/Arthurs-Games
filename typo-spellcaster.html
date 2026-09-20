@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Typo Spellcaster — Arthur Games</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0c0818;
+      color: #f0ecff;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px 20px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff8e8, #c8a0ff 40%, #5ae8c8 75%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      margin: 0 0 18px;
+      font-size: 0.88rem;
+      color: #9a92b8;
+      text-align: center;
+      max-width: 34rem;
+      line-height: 1.55;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    button.btn {
+      padding: 11px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px solid rgba(180, 140, 255, 0.5);
+      background: linear-gradient(165deg, #281838 0%, #120c20 100%);
+      color: #f0e8ff;
+      font-family: inherit;
+    }
+    button.btn:hover { filter: brightness(1.12); border-color: #c8a8ff; }
+    .hud {
+      display: none;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.88rem;
+      color: #b0a8c8;
+    }
+    .hud.visible { display: flex; }
+    .hud strong { color: #c8a0ff; }
+    .hud .spells-hud {
+      flex: 1 1 100%;
+      font-size: 0.8rem;
+      color: #9a92b8;
+      text-align: center;
+      line-height: 1.45;
+      max-width: 100%;
+    }
+    .hud .spells-hud strong { font-weight: 700; }
+    #hubPanel { max-width: 36rem; text-align: center; }
+    #playShell {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 980px;
+      position: relative;
+    }
+    #playShell.open { display: flex; }
+    .wrap {
+      position: relative;
+      line-height: 0;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(180, 140, 255, 0.15) inset;
+    }
+    #game {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #100c1a;
+      border-radius: 12px;
+      touch-action: none;
+    }
+    .frame-tap-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(10, 6, 20, 0.92);
+      border: 1px solid rgba(180, 140, 255, 0.35);
+      color: #f0ecff;
+      font-size: 1rem;
+      font-weight: 650;
+      text-align: center;
+      padding: 18px;
+      user-select: none;
+    }
+    .frame-tap-overlay.hidden { display: none !important; }
+    .frame-tap-overlay .small {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(200, 180, 230, 0.85);
+      max-width: 24rem;
+      line-height: 1.45;
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #6a6488;
+      text-align: center;
+      max-width: 34rem;
+      line-height: 1.45;
+    }
+    .level-select-title { margin: 0 0 12px; font-size: 1rem; font-weight: 700; color: #c8a0ff; }
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 0 0 16px;
+      text-align: left;
+    }
+    button.level-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 2px solid rgba(180, 140, 255, 0.45);
+      background: linear-gradient(165deg, #281838 0%, #120c20 100%);
+      color: #f0e8ff;
+      font-family: inherit;
+      text-align: left;
+    }
+    button.level-btn:hover:not(:disabled) { filter: brightness(1.12); }
+    button.level-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.level-btn .num { font-size: 0.72rem; color: #c8a0ff; }
+    button.level-btn .tag { font-size: 0.68rem; color: #6ae8c8; }
+    button.level-btn .tag.locked { color: #6a6880; }
+    #levelSelectPanel.hidden { display: none !important; }
+    #playOverlays {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      pointer-events: none;
+    }
+    #playOverlays .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.88);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    #playOverlays .overlay.hidden { display: none !important; pointer-events: none; }
+    .overlay-inner { text-align: center; max-width: 26rem; line-height: 1.55; }
+    .overlay-inner .big { font-size: 1.25rem; font-weight: 800; color: #c8a0ff; margin: 0 0 10px; }
+    .overlay-inner p { margin: 0 0 14px; color: #b0a8c8; }
+  </style>
+</head>
+<body>
+  <div id="hubPanel">
+    <div id="hubMain">
+      <h1>The Typo Spellcaster</h1>
+      <p class="sub">
+        Type words to cast magic in a dungeon crawl. <strong>FIRE</strong> lobs a fireball;
+        <strong>ICE</strong> freezes foes. But a typo like <strong>FIER</strong> backfires — hot mud,
+        inventory blaze, heals on enemies. <strong>Enter</strong> to cast · arrows to move.
+      </p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="btnPlay">Play</button>
+        <button type="button" class="btn" id="btnLevels">Floor select</button>
+      </div>
+      <p class="hint" id="progressHint"></p>
+    </div>
+    <div id="levelSelectPanel" class="hidden" aria-hidden="true">
+      <p class="level-select-title">Choose a floor</p>
+      <div class="level-grid" id="levelGrid"></div>
+      <button type="button" class="btn" id="btnBackHub">Back</button>
+    </div>
+  </div>
+
+  <div id="playShell">
+    <div class="hud" id="hud">
+      <span>Floor <strong id="levelEl">1</strong> / <strong id="totalEl">5</strong></span>
+      <span>HP <strong id="hpEl">100</strong></span>
+      <span>Room <strong id="roomEl">1</strong></span>
+      <span>Spell <strong id="spellEl">—</strong></span>
+      <span class="spells-hud" id="spellsHud" title="Spells you can cast on this floor"></span>
+    </div>
+    <div class="wrap">
+      <canvas id="game" width="960" height="540" tabindex="0" aria-label="Typo Spellcaster dungeon"></canvas>
+      <div class="frame-tap-overlay" id="tapOverlay" role="button" tabindex="0">
+        <span>Click to focus the grimoire</span>
+        <span class="small">Arrows move · type a spell word · Enter casts · Backspace erases · typos glitch back on you</span>
+      </div>
+      <div id="playOverlays">
+        <div class="overlay hidden" id="loseOverlay" aria-hidden="true">
+          <div class="overlay-inner">
+            <p class="big">Spell fizzled… you didn't</p>
+            <p id="loseMsg"></p>
+            <button type="button" class="btn" id="btnRetry">Retry floor</button>
+            <button type="button" class="btn" id="btnLoseMenu" style="margin-left:8px">Menu</button>
+          </div>
+        </div>
+        <div class="overlay hidden" id="winOverlay" aria-hidden="true">
+          <div class="overlay-inner">
+            <p class="big" id="winTitle">Floor clear!</p>
+            <p id="winMsg"></p>
+            <button type="button" class="btn" id="btnNext">Next floor</button>
+            <button type="button" class="btn" id="btnWinMenu" style="margin-left:8px">Menu</button>
+          </div>
+        </div>
+        <div class="overlay hidden" id="doneOverlay" aria-hidden="true">
+          <div class="overlay-inner">
+            <p class="big">Arch-typo-mancer</p>
+            <p id="doneMsg"></p>
+            <button type="button" class="btn" id="btnDoneMenu">Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Green buffer = valid prefix · purple flash on Enter = clean cast · glitch text = typo backfire</p>
+  </div>
+
+  <script src="arthur-shop.js"></script>
+  <script src="arthur-profile.js"></script>
+  <script src="arthur-modes.js"></script>
+  <script src="arthur-music.js"></script>
+  <script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const TILE = 48;
+  const PLAY_UI_H = 118;
+  const LS_PROGRESS = 'typoSpellcasterProgress';
+
+  /** Y coordinate where the spell strip begins (player cannot go below this). */
+  function spellBarTop() {
+    return H - PLAY_UI_H;
+  }
+
+  const SPELLS = {
+    FIRE: {
+      name: 'Fireball',
+      desc: 'Explosive bolt',
+      color: '#ff6a40',
+      cast: function () {
+        if (!enemies.length) {
+          flashMsg = 'No foes to burn';
+          flashT = 1;
+          return;
+        }
+        spawnProjectile('fire', player.x, player.y, aimAtNearest(), 420, 28, 8);
+      },
+    },
+    ICE: {
+      name: 'Frost cone',
+      desc: 'Slows enemies',
+      color: '#6ad8ff',
+      cast: function () {
+        spawnCone('ice', player.x, player.y, aimAtNearest(), 140, 0.55);
+      },
+    },
+    HEAL: {
+      name: 'Mend',
+      desc: '+35 HP',
+      color: '#6ae8a0',
+      cast: function () {
+        castHeal(35);
+      },
+    },
+    BOLT: {
+      name: 'Lightning',
+      desc: 'Piercing zap',
+      color: '#ffe86a',
+      cast: function () {
+        if (!enemies.length) {
+          flashMsg = 'No foes to zap';
+          flashT = 1;
+          return;
+        }
+        spawnProjectile('bolt', player.x, player.y, aimAtNearest(), 620, 14, 22);
+      },
+    },
+    WARD: {
+      name: 'Ward',
+      desc: 'Shield bubble',
+      color: '#c8a0ff',
+      cast: function () {
+        player.shield = Math.min(80, player.shield + 45);
+        player.shieldT = 8;
+        flashMsg = 'Warded';
+        flashT = 1;
+      },
+    },
+    SMITE: {
+      name: 'Smite',
+      desc: 'Holy burst',
+      color: '#fff8c0',
+      cast: function () {
+        spawnAoE(player.x, player.y, 100, 55, '#fff8c0');
+      },
+    },
+  };
+
+  const TYPO_GLITCH = {
+    FIRE: [
+      { id: 'hot_mud', label: 'Hot mud!', fn: glitchHotMud },
+      { id: 'self_burn', label: 'Inventory blaze!', fn: glitchInventoryFire },
+      { id: 'smoke', label: 'Backfire smoke!', fn: glitchSmoke },
+    ],
+    ICE: [
+      { id: 'freeze_self', label: 'Flash-freeze self!', fn: glitchFreezeSelf },
+      { id: 'slip', label: 'Icy floor!', fn: glitchSlip },
+    ],
+    HEAL: [
+      { id: 'heal_foes', label: 'Heals enemies!', fn: glitchHealFoes },
+      { id: 'poison', label: 'Toxic mend!', fn: glitchPoisonSelf },
+    ],
+    BOLT: [
+      { id: 'shock_self', label: 'Self-shock!', fn: glitchShockSelf },
+      { id: 'reverse', label: 'Bolt reversed!', fn: glitchReverseBolt },
+    ],
+    WARD: [
+      { id: 'warp', label: 'Chaotic warp!', fn: glitchWarp },
+      { id: 'no_shield', label: 'Ward collapsed!', fn: glitchStripShield },
+    ],
+    SMITE: [
+      { id: 'smite_self', label: 'Smite backfires!', fn: glitchSmiteSelf },
+      { id: 'glitter', label: 'Harmless glitter!', fn: glitchGlitter },
+    ],
+  };
+
+  const KNOWN_TYPOS = {
+    FIER: 'FIRE',
+    FRIE: 'FIRE',
+    FAER: 'FIRE',
+    FIREE: 'FIRE',
+    IEC: 'ICE',
+    ICEE: 'ICE',
+    IICE: 'ICE',
+    HEEL: 'HEAL',
+    HIAL: 'HEAL',
+    HAEL: 'HEAL',
+    HEALL: 'HEAL',
+    BOTL: 'BOLT',
+    BLTO: 'BOLT',
+    BLOP: 'BOLT',
+    WARP: 'WARD',
+    WRAD: 'WARD',
+    WORD: 'WARD',
+    SMOTE: 'SMITE',
+    SMIT: 'SMITE',
+    SMILE: 'SMITE',
+  };
+
+  const FLOORS = [
+    {
+      name: 'Scriptorium',
+      hint: 'FIRE and HEAL only. Enter to cast — typos hurt.',
+      spells: ['FIRE', 'HEAL'],
+      rooms: [
+        { enemies: [{ type: 'slime', n: 4 }] },
+        { enemies: [{ type: 'slime', n: 6 }] },
+      ],
+    },
+    {
+      name: 'Frozen stacks',
+      hint: 'Add ICE. Watch IEC and ICEE.',
+      spells: ['FIRE', 'ICE', 'HEAL'],
+      rooms: [
+        { enemies: [{ type: 'slime', n: 5 }, { type: 'bat', n: 3 }] },
+        { enemies: [{ type: 'skeleton', n: 4 }] },
+      ],
+    },
+    {
+      name: 'Volt vault',
+      hint: 'BOLT pierces lines. BOTL shocks you.',
+      spells: ['FIRE', 'ICE', 'BOLT', 'HEAL'],
+      rooms: [
+        { enemies: [{ type: 'bat', n: 6 }, { type: 'skeleton', n: 3 }] },
+        { enemies: [{ type: 'mage', n: 2 }, { type: 'slime', n: 4 }] },
+      ],
+    },
+    {
+      name: 'Warded wing',
+      hint: 'WARD before packs. WARP teleports you randomly.',
+      spells: ['FIRE', 'ICE', 'BOLT', 'WARD', 'HEAL'],
+      rooms: [
+        { enemies: [{ type: 'skeleton', n: 6 }, { type: 'mage', n: 2 }] },
+        { enemies: [{ type: 'brute', n: 2 }, { type: 'bat', n: 5 }] },
+      ],
+    },
+    {
+      name: 'Cathedral of keys',
+      hint: 'Full grimoire including SMITE. SMOTE smites you.',
+      spells: ['FIRE', 'ICE', 'BOLT', 'WARD', 'HEAL', 'SMITE'],
+      rooms: [
+        { enemies: [{ type: 'mage', n: 4 }, { type: 'brute', n: 1 }] },
+        { enemies: [{ type: 'brute', n: 2 }, { type: 'skeleton', n: 6 }, { type: 'mage', n: 2 }] },
+      ],
+    },
+  ];
+
+  const ENEMY_TYPES = {
+    slime: { hp: 24, spd: 45, r: 14, dmg: 12, col: '#5ae878', weight: 1 },
+    bat: { hp: 16, spd: 95, r: 10, dmg: 10, col: '#a878ff', weight: 1.1 },
+    skeleton: { hp: 36, spd: 58, r: 13, dmg: 16, col: '#e8e0d0', weight: 1.6 },
+    mage: { hp: 28, spd: 40, r: 12, dmg: 18, col: '#ff8ed8', weight: 1.5 },
+    brute: { hp: 90, spd: 32, r: 20, dmg: 28, col: '#ff5a4a', weight: 4 },
+  };
+
+  const ENEMY_POOL_ORDER = ['slime', 'bat', 'skeleton', 'mage', 'brute'];
+  const SPELL_UNLOCK_ORDER = ['FIRE', 'HEAL', 'ICE', 'BOLT', 'WARD', 'SMITE'];
+
+  function endlessActive() {
+    return window.ArthurModes && ArthurModes.isEndless();
+  }
+
+  function seededRandom(seed) {
+    let s = seed | 0;
+    return function () {
+      s = (Math.imul(s, 1664525) + 1013904223) | 0;
+      return (s >>> 0) / 4294967296;
+    };
+  }
+
+  function pickWeightedType(types, rand) {
+    let total = 0;
+    let i;
+    for (i = 0; i < types.length; i++) {
+      total += (ENEMY_TYPES[types[i]] || ENEMY_TYPES.slime).weight || 1;
+    }
+    let roll = rand() * total;
+    for (i = 0; i < types.length; i++) {
+      roll -= (ENEMY_TYPES[types[i]] || ENEMY_TYPES.slime).weight || 1;
+      if (roll <= 0) return types[i];
+    }
+    return types[types.length - 1];
+  }
+
+  function generateRandomFloor(gen) {
+    const rand = seededRandom(gen * 92837111 + 48828125);
+    const tier = Math.min(ENEMY_POOL_ORDER.length - 1, 1 + Math.floor(gen / 2));
+    const pool = ENEMY_POOL_ORDER.slice(0, tier + 1);
+    const spellCount = Math.min(SPELL_UNLOCK_ORDER.length, 2 + Math.floor(gen / 2));
+    const spells = SPELL_UNLOCK_ORDER.slice(0, spellCount);
+    const roomCount = Math.min(5, 2 + Math.floor(gen / 3) + (rand() < 0.45 ? 1 : 0));
+    const rooms = [];
+    let r;
+    for (r = 0; r < roomCount; r++) {
+      const budget = 5 + Math.floor(gen * 1.35) + Math.floor(rand() * 5);
+      const groupCount = 1 + (rand() < 0.55 ? 1 : 0) + (gen > 4 && rand() < 0.35 ? 1 : 0);
+      const groups = [];
+      let spent = 0;
+      let g;
+      for (g = 0; g < groupCount && spent < budget; g++) {
+        const type = pickWeightedType(pool, rand);
+        const wt = (ENEMY_TYPES[type] || ENEMY_TYPES.slime).weight || 1;
+        let n = type === 'brute' ? 1 : 1 + Math.floor(rand() * 3);
+        if (gen > 6 && type !== 'brute' && rand() < 0.3) n++;
+        n = Math.min(n, Math.max(1, Math.floor((budget - spent) / wt)));
+        if (n < 1) continue;
+        const prev = groups.find(function (gr) {
+          return gr.type === type;
+        });
+        if (prev) prev.n += n;
+        else groups.push({ type: type, n: n });
+        spent += n * wt;
+      }
+      if (!groups.length) {
+        groups.push({ type: 'slime', n: 3 + Math.floor(gen * 0.5) });
+      }
+      rooms.push({ enemies: groups });
+    }
+    const names = [
+      'Whisper vault',
+      'Glyph catacombs',
+      'Misprint halls',
+      'Shattered scriptorium',
+      'Echoing stacks',
+      'Runed undercroft',
+    ];
+    return {
+      name: names[Math.floor(rand() * names.length)] + ' · gen ' + gen,
+      hint: 'Endless — new random foes every generation. Typos still backfire.',
+      spells: spells,
+      rooms: rooms,
+      endlessGen: gen,
+      scale: 1 + (gen - 1) * 0.09,
+    };
+  }
+
+  const hubPanel = document.getElementById('hubPanel');
+  const playShell = document.getElementById('playShell');
+  const hud = document.getElementById('hud');
+  const tapOverlay = document.getElementById('tapOverlay');
+  const levelEl = document.getElementById('levelEl');
+  const totalEl = document.getElementById('totalEl');
+  const hpEl = document.getElementById('hpEl');
+  const roomEl = document.getElementById('roomEl');
+  const spellEl = document.getElementById('spellEl');
+  const progressHint = document.getElementById('progressHint');
+  const loseOverlay = document.getElementById('loseOverlay');
+  const loseMsg = document.getElementById('loseMsg');
+  const winOverlay = document.getElementById('winOverlay');
+  const winTitle = document.getElementById('winTitle');
+  const winMsg = document.getElementById('winMsg');
+  const doneOverlay = document.getElementById('doneOverlay');
+  const doneMsg = document.getElementById('doneMsg');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnLevels = document.getElementById('btnLevels');
+  const btnBackHub = document.getElementById('btnBackHub');
+  const hubMain = document.getElementById('hubMain');
+  const levelSelectPanel = document.getElementById('levelSelectPanel');
+  const levelGrid = document.getElementById('levelGrid');
+  const btnRetry = document.getElementById('btnRetry');
+  const btnLoseMenu = document.getElementById('btnLoseMenu');
+  const btnNext = document.getElementById('btnNext');
+  const btnWinMenu = document.getElementById('btnWinMenu');
+  const btnDoneMenu = document.getElementById('btnDoneMenu');
+
+  totalEl.textContent = String(FLOORS.length);
+
+  let progress = parseInt(localStorage.getItem(LS_PROGRESS) || '0', 10) || 0;
+  let playing = false;
+  let needsFocus = true;
+  let floorIndex = 0;
+  let endlessGeneration = 0;
+  let floorCfg = null;
+  let roomIndex = 0;
+  let roomPlan = [];
+  let allowedSpells = [];
+  let buffer = '';
+  let keys = {};
+  let flashMsg = '';
+  let flashT = 0;
+  let glitchMsg = '';
+  let glitchT = 0;
+  let mudPuddles = [];
+  let inventory = [];
+  let inventoryFireT = 0;
+  let playerFrozenT = 0;
+  let slipT = 0;
+  let healFloatT = 0;
+  let healFloatAmt = 0;
+
+  const player = { x: 200, y: 270, r: 14, hp: 100, maxHp: 100, shield: 0, shieldT: 0, inv: 0 };
+  let enemies = [];
+  let projectiles = [];
+  let particles = [];
+  let walls = [];
+  let enemyUid = 0;
+  let rafId = 0;
+  let lastT = 0;
+
+  function isFloorUnlocked(idx) {
+    return idx <= progress;
+  }
+
+  function syncProgressHint() {
+    const unlocked = Math.min(progress + 1, FLOORS.length);
+    progressHint.textContent =
+      progress >= FLOORS.length
+        ? 'All floors cleared — type SMITE without typos.'
+        : unlocked + ' of ' + FLOORS.length + ' floors unlocked.';
+    if (btnPlay) {
+      btnPlay.textContent =
+        progress > 0 && progress < FLOORS.length
+          ? 'Continue'
+          : progress >= FLOORS.length
+            ? 'Play again'
+            : 'Play';
+    }
+  }
+
+  function rebuildLevelGrid() {
+    if (!levelGrid) return;
+    levelGrid.innerHTML = '';
+    let i;
+    for (i = 0; i < FLOORS.length; i++) {
+      const F = FLOORS[i];
+      const unlocked = isFloorUnlocked(i);
+      const beaten = i < progress;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'level-btn';
+      btn.disabled = !unlocked;
+      btn.innerHTML =
+        '<span class="num">Floor ' +
+        (i + 1) +
+        '</span><span>' +
+        F.name +
+        '</span>' +
+        (beaten ? '<span class="tag">Clear</span>' : unlocked ? '' : '<span class="tag locked">Locked</span>');
+      (function (idx) {
+        btn.addEventListener('click', function () {
+          startPlayAt(idx);
+        });
+      })(i);
+      levelGrid.appendChild(btn);
+    }
+  }
+
+  function showLevelSelect() {
+    if (hubMain) hubMain.style.display = 'none';
+    if (levelSelectPanel) {
+      levelSelectPanel.classList.remove('hidden');
+      levelSelectPanel.setAttribute('aria-hidden', 'false');
+    }
+    rebuildLevelGrid();
+  }
+
+  function hideLevelSelect() {
+    if (hubMain) hubMain.style.display = 'block';
+    if (levelSelectPanel) {
+      levelSelectPanel.classList.add('hidden');
+      levelSelectPanel.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function hideOverlays() {
+    loseOverlay.classList.add('hidden');
+    loseOverlay.setAttribute('aria-hidden', 'true');
+    winOverlay.classList.add('hidden');
+    winOverlay.setAttribute('aria-hidden', 'true');
+    doneOverlay.classList.add('hidden');
+    doneOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function initInventory() {
+    inventory = [
+      { name: 'Potion', icon: '🧪', ok: true },
+      { name: 'Tome', icon: '📖', ok: true },
+      { name: 'Key', icon: '🗝', ok: true },
+      { name: 'Gem', icon: '💎', ok: true },
+      { name: 'Rope', icon: '🪢', ok: true },
+      { name: 'Charm', icon: '✨', ok: true },
+    ];
+    inventoryFireT = 0;
+  }
+
+  function buildWalls() {
+    walls = [];
+    const floorY = spellBarTop() - TILE;
+    let x;
+    for (x = 0; x < W; x += TILE) {
+      walls.push({ x: x, y: 0, w: TILE, h: TILE });
+      walls.push({ x: x, y: floorY, w: TILE, h: TILE });
+    }
+    let y;
+    for (y = TILE; y < floorY; y += TILE) {
+      walls.push({ x: 0, y: y, w: TILE, h: TILE });
+      walls.push({ x: W - TILE, y: y, w: TILE, h: TILE });
+    }
+    walls.push({ x: TILE * 4, y: TILE * 2, w: TILE * 2, h: TILE });
+    walls.push({ x: TILE * 10, y: TILE * 6, w: TILE, h: TILE * 3 });
+    walls.push({ x: TILE * 14, y: TILE * 3, w: TILE * 2, h: TILE });
+  }
+
+  function randomClearPoint(r) {
+    const margin = r + 8;
+    const top = TILE + margin;
+    const bottom = spellBarTop() - margin;
+    const left = TILE + margin;
+    const right = W - TILE - margin;
+    let tries = 0;
+    for (tries = 0; tries < 80; tries++) {
+      const x = left + Math.random() * (right - left);
+      const y = top + Math.random() * Math.max(40, bottom - top);
+      if (!collideWalls(x, y, r + 2)) return { x: x, y: y };
+    }
+    return { x: W * 0.5, y: H * 0.42 };
+  }
+
+  function spawnRoomEnemies(room) {
+    enemies = [];
+    const scale = floorCfg && floorCfg.scale ? floorCfg.scale : 1;
+    let g;
+    for (g = 0; g < room.enemies.length; g++) {
+      const spec = room.enemies[g];
+      const def = ENEMY_TYPES[spec.type] || ENEMY_TYPES.slime;
+      const hp = Math.max(1, Math.round(def.hp * scale));
+      const dmg = Math.max(1, Math.round(def.dmg * scale));
+      const spd = def.spd * (1 + (scale - 1) * 0.45);
+      let k;
+      for (k = 0; k < spec.n; k++) {
+        const pos = randomClearPoint(def.r);
+        enemyUid++;
+        enemies.push({
+          uid: enemyUid,
+          x: pos.x,
+          y: pos.y,
+          type: spec.type,
+          hp: hp,
+          maxHp: hp,
+          spd: spd,
+          r: def.r,
+          dmg: dmg,
+          col: def.col,
+          slowT: 0,
+          hitCd: 0,
+        });
+      }
+    }
+  }
+
+  function loadRoom(idx) {
+    roomIndex = idx;
+    spawnRoomEnemies(roomPlan[idx]);
+    const spawn = randomClearPoint(player.r);
+    player.x = spawn.x;
+    player.y = spawn.y;
+    resolveWallOverlap(player);
+    buffer = '';
+    mudPuddles = [];
+    roomEl.textContent = String(idx + 1) + ' / ' + roomPlan.length;
+    spellEl.textContent = '—';
+    flashMsg = 'Room ' + (idx + 1);
+    flashT = 1.2;
+  }
+
+  function loadFloor(idx) {
+    floorIndex = idx;
+    floorCfg = FLOORS[idx];
+    roomPlan = floorCfg.rooms.slice();
+    allowedSpells = floorCfg.spells.slice();
+    roomIndex = 0;
+    player.hp = 100;
+    player.maxHp = 100;
+    player.shield = 0;
+    player.shieldT = 0;
+    player.inv = 0;
+    playerFrozenT = 0;
+    slipT = 0;
+    healFloatT = 0;
+    healFloatAmt = 0;
+    projectiles = [];
+    particles = [];
+    initInventory();
+    buildWalls();
+    loadRoom(0);
+    hideOverlays();
+    levelEl.textContent = String(idx + 1);
+    if (totalEl) totalEl.textContent = String(FLOORS.length);
+    refreshHud();
+    syncSpellsHud();
+  }
+
+  function loadRandomEndlessFloor(gen) {
+    endlessGeneration = gen;
+    floorIndex = -1;
+    floorCfg = generateRandomFloor(gen);
+    roomPlan = floorCfg.rooms.slice();
+    allowedSpells = floorCfg.spells.slice();
+    roomIndex = 0;
+    player.hp = 100;
+    player.maxHp = 100;
+    player.shield = 0;
+    player.shieldT = 0;
+    player.inv = 0;
+    playerFrozenT = 0;
+    slipT = 0;
+    healFloatT = 0;
+    healFloatAmt = 0;
+    projectiles = [];
+    particles = [];
+    initInventory();
+    buildWalls();
+    loadRoom(0);
+    hideOverlays();
+    levelEl.textContent = 'Gen ' + gen;
+    if (totalEl) totalEl.textContent = '∞';
+    refreshHud();
+    syncSpellsHud();
+    flashMsg = floorCfg.name;
+    flashT = 2;
+  }
+
+  function startPlayAt(idx) {
+    hubPanel.style.display = 'none';
+    playShell.classList.add('open');
+    hud.classList.add('visible');
+    hideLevelSelect();
+    loadFloor(idx);
+    playing = true;
+    needsFocus = true;
+    if (tapOverlay) tapOverlay.classList.remove('hidden');
+    lastT = performance.now();
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }
+
+  function startEndlessAt(gen) {
+    hubPanel.style.display = 'none';
+    playShell.classList.add('open');
+    hud.classList.add('visible');
+    hideLevelSelect();
+    loadRandomEndlessFloor(gen);
+    playing = true;
+    needsFocus = true;
+    if (tapOverlay) tapOverlay.classList.remove('hidden');
+    lastT = performance.now();
+    if (!rafId) rafId = requestAnimationFrame(tick);
+    if (window.ArthurModes) {
+      ArthurModes.updateEndlessHud(document.getElementById('hud'), 'gen ' + gen);
+    }
+  }
+
+  function returnToHub() {
+    playing = false;
+    hideOverlays();
+    playShell.classList.remove('open');
+    hud.classList.remove('visible');
+    hubPanel.style.display = 'block';
+    hideLevelSelect();
+    if (tapOverlay) tapOverlay.classList.remove('hidden');
+    syncProgressHint();
+    rebuildLevelGrid();
+  }
+
+  function setWin() {
+    if (
+      window.ArthurModes &&
+      ArthurModes.advanceEndlessGeneration({
+        hudEl: document.getElementById('hud'),
+        label: 'gen',
+        onGenerate: function () {
+          loadRandomEndlessFloor(endlessGeneration + 1);
+        },
+        resume: function () {
+          playing = true;
+        },
+      })
+    ) {
+      return;
+    }
+    playing = false;
+    if (floorIndex + 1 > progress) {
+      progress = floorIndex + 1;
+      localStorage.setItem(LS_PROGRESS, String(progress));
+    }
+    syncProgressHint();
+    if (floorIndex >= FLOORS.length - 1) {
+      doneMsg.textContent = 'Every floor typed clean — your grimoire is flawless.';
+      doneOverlay.classList.remove('hidden');
+      doneOverlay.setAttribute('aria-hidden', 'false');
+    } else {
+      winTitle.textContent = 'Floor clear!';
+      winMsg.textContent = FLOORS[floorIndex].name + ' — the dungeon respects your spelling.';
+      winOverlay.classList.remove('hidden');
+      winOverlay.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function setLose() {
+    playing = false;
+    loseMsg.textContent = 'HP hit zero. Proofread before you Enter.';
+    loseOverlay.classList.remove('hidden');
+    loseOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function aimAtNearest() {
+    if (!enemies.length) return 0;
+    let best = enemies[0];
+    let bd = 1e9;
+    let i;
+    for (i = 0; i < enemies.length; i++) {
+      const d = Math.hypot(enemies[i].x - player.x, enemies[i].y - player.y);
+      if (d < bd) {
+        bd = d;
+        best = enemies[i];
+      }
+    }
+    return Math.atan2(best.y - player.y, best.x - player.x);
+  }
+
+  function purgeDeadEnemies() {
+    let i;
+    for (i = enemies.length - 1; i >= 0; i--) {
+      if (enemies[i].hp <= 0) enemies.splice(i, 1);
+    }
+  }
+
+  function damageEnemy(e, amt, particleCol) {
+    e.hp -= amt;
+    spawnParticles(e.x, e.y, particleCol || '#ffe86a', 6);
+  }
+
+  function projectileSpawnPoint(x, y, ang, wallR) {
+    const pad = TILE + wallR + 2;
+    let dist;
+    for (dist = player.r + 6; dist < 140; dist += 8) {
+      const px = x + Math.cos(ang) * dist;
+      const py = y + Math.sin(ang) * dist;
+      if (px < pad || px > W - pad || py < pad || py > H - TILE - wallR - 8) continue;
+      if (!collideWalls(px, py, wallR)) return { x: px, y: py };
+    }
+    return { x: x + Math.cos(ang) * (player.r + 10), y: y + Math.sin(ang) * (player.r + 10) };
+  }
+
+  function spawnProjectile(kind, x, y, ang, spd, r, dmg) {
+    const wallR = kind === 'fire' ? 12 : 7;
+    const hitR = r;
+    let pt = projectileSpawnPoint(x, y, ang, wallR);
+    if (collideWalls(pt.x, pt.y, wallR)) {
+      const fan = [-0.45, 0.45, -0.9, 0.9, Math.PI];
+      let k;
+      for (k = 0; k < fan.length; k++) {
+        const tryAng = ang + fan[k];
+        pt = projectileSpawnPoint(x, y, tryAng, wallR);
+        if (!collideWalls(pt.x, pt.y, wallR)) {
+          ang = tryAng;
+          break;
+        }
+      }
+    }
+    projectiles.push({
+      kind: kind,
+      x: pt.x,
+      y: pt.y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      r: hitR,
+      wallR: wallR,
+      dmg: dmg,
+      life: kind === 'bolt' ? 3.4 : 2.6,
+      grace: kind === 'bolt' ? 0.28 : 0.12,
+      wallGrace: 0.18,
+      hitIds: kind === 'bolt' ? {} : null,
+    });
+  }
+
+  function spawnCone(kind, x, y, ang, range, slow) {
+    let i;
+    let hits = 0;
+    for (i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > range + e.r) continue;
+      const a = Math.atan2(dy, dx);
+      let diff = a - ang;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      if (Math.abs(diff) < 0.72) {
+        damageEnemy(e, 18, '#6ad8ff');
+        e.slowT = Math.max(e.slowT, slow);
+        hits++;
+      }
+    }
+    spawnParticles(x, y, '#6ad8ff', hits > 0 ? 16 : 8);
+    purgeDeadEnemies();
+    if (!hits && enemies.length) {
+      flashMsg = 'Cone missed — face the horde';
+      flashT = 0.9;
+    }
+  }
+
+  function spawnAoE(x, y, range, dmg, col) {
+    let i;
+    let hits = 0;
+    for (i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      if (Math.hypot(e.x - x, e.y - y) < range + e.r) {
+        damageEnemy(e, dmg, col);
+        hits++;
+      }
+    }
+    spawnParticles(x, y, col, hits > 0 ? 24 : 10);
+    purgeDeadEnemies();
+  }
+
+  function spawnParticles(x, y, col, n) {
+    let i;
+    for (i = 0; i < n; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 220,
+        vy: (Math.random() - 0.5) * 220,
+        life: 0.3 + Math.random() * 0.35,
+        col: col,
+      });
+    }
+  }
+
+  function refreshHud() {
+    if (hpEl) hpEl.textContent = String(Math.max(0, Math.ceil(player.hp)));
+  }
+
+  function castHeal(amount) {
+    const before = player.hp;
+    player.hp = Math.min(player.maxHp, player.hp + amount);
+    const gained = Math.max(0, Math.ceil(player.hp - before));
+    refreshHud();
+    healFloatAmt = gained;
+    healFloatT = gained > 0 ? 1.5 : 0.9;
+    if (gained > 0) {
+      flashMsg = 'Mended +' + gained + ' HP';
+      flashT = 1.4;
+    } else {
+      flashMsg = 'Already at full HP';
+      flashT = 1;
+    }
+    spawnParticles(player.x, player.y, '#6ae8a0', gained > 0 ? 16 : 8);
+    return gained;
+  }
+
+  function damagePlayer(amt, source) {
+    if (player.inv > 0) return;
+    let left = amt;
+    if (player.shield > 0) {
+      const absorbed = Math.min(player.shield, left);
+      player.shield -= absorbed;
+      left -= absorbed;
+    }
+    if (left > 0) {
+      player.hp -= left;
+      refreshHud();
+      player.inv = source === 'melee' ? 0.45 : 0.35;
+      if (player.hp <= 0) setLose();
+    }
+  }
+
+  function glitchHotMud() {
+    mudPuddles.push({ x: player.x, y: player.y, r: 55, life: 6, dmg: 6 });
+    glitchMsg = 'Hot mud!';
+    glitchT = 2;
+    screenShake = 0.2;
+  }
+
+  function glitchInventoryFire() {
+    inventoryFireT = 5;
+    let i;
+    for (i = 0; i < inventory.length; i++) inventory[i].ok = false;
+    glitchMsg = 'Inventory on fire!';
+    glitchT = 2.5;
+    flashMsg = '🔥 satchel blaze';
+    flashT = 1.5;
+  }
+
+  function glitchSmoke() {
+    player.inv = 0;
+    damagePlayer(12, 'smoke');
+    glitchMsg = 'Choking smoke!';
+    glitchT = 1.8;
+  }
+
+  function glitchFreezeSelf() {
+    playerFrozenT = 2.5;
+    glitchMsg = 'Frozen fingers!';
+    glitchT = 2;
+  }
+
+  function glitchSlip() {
+    slipT = 3;
+    glitchMsg = 'Icy boots!';
+    glitchT = 2;
+  }
+
+  function glitchHealFoes() {
+    let i;
+    for (i = 0; i < enemies.length; i++) {
+      enemies[i].hp = Math.min(enemies[i].maxHp, enemies[i].hp + 20);
+      spawnParticles(enemies[i].x, enemies[i].y, '#ff8ed8', 6);
+    }
+    glitchMsg = 'Healed the horde!';
+    glitchT = 2;
+  }
+
+  function glitchPoisonSelf() {
+    damagePlayer(18, 'poison');
+    glitchMsg = 'Toxic typo!';
+    glitchT = 2;
+  }
+
+  function glitchShockSelf() {
+    damagePlayer(25, 'shock');
+    spawnParticles(player.x, player.y, '#ffe86a', 14);
+    glitchMsg = 'Self-zapped!';
+    glitchT = 2;
+  }
+
+  function glitchReverseBolt() {
+    const ang = aimAtNearest() + Math.PI;
+    spawnProjectile('bolt', player.x, player.y, ang, 500, 14, 20);
+    glitchMsg = 'Bolt reversed!';
+    glitchT = 1.8;
+  }
+
+  function glitchWarp() {
+    const pos = randomClearPoint(player.r);
+    player.x = pos.x;
+    player.y = pos.y;
+    resolveWallOverlap(player);
+    spawnParticles(player.x, player.y, '#c8a0ff', 20);
+    glitchMsg = 'Warped!';
+    glitchT = 1.5;
+  }
+
+  function glitchStripShield() {
+    player.shield = 0;
+    player.shieldT = 0;
+    glitchMsg = 'Ward collapsed!';
+    glitchT = 1.5;
+  }
+
+  function glitchSmiteSelf() {
+    spawnAoE(player.x, player.y, 70, 40, '#ff4060');
+    damagePlayer(30, 'smite');
+    glitchMsg = 'Smote yourself!';
+    glitchT = 2.2;
+  }
+
+  function glitchGlitter() {
+    spawnParticles(player.x, player.y, '#fff8c0', 40);
+    glitchMsg = 'Glitter storm (useless)';
+    glitchT = 1.5;
+  }
+
+  let screenShake = 0;
+
+  function levenshtein(a, b) {
+    const m = a.length;
+    const n = b.length;
+    const dp = [];
+    let i;
+    let j;
+    for (i = 0; i <= m; i++) {
+      dp[i] = [i];
+    }
+    for (j = 0; j <= n; j++) dp[0][j] = j;
+    for (i = 1; i <= m; i++) {
+      for (j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+    return dp[m][n];
+  }
+
+  function resolveSpell(word) {
+    const w = word.toUpperCase().trim();
+    if (!w) return;
+
+    if ((w === 'MEND' || w === 'MENDS') && allowedSpells.indexOf('HEAL') >= 0) {
+      castHeal(35);
+      spellEl.textContent = 'HEAL';
+      spellEl.style.color = SPELLS.HEAL.color;
+      screenShake = 0.04;
+      return;
+    }
+
+    if (SPELLS[w] && allowedSpells.indexOf(w) >= 0) {
+      SPELLS[w].cast();
+      refreshHud();
+      if (w !== 'HEAL') {
+        flashMsg = SPELLS[w].name + '!';
+        flashT = 1.2;
+      }
+      spellEl.textContent = w;
+      spellEl.style.color = SPELLS[w].color;
+      screenShake = w === 'HEAL' ? 0.04 : 0.08;
+      return;
+    }
+
+    if (SPELLS[w] && allowedSpells.indexOf(w) < 0) {
+      flashMsg = w + ' is not on this floor';
+      flashT = 1.2;
+      spellEl.textContent = w + '?';
+      spellEl.style.color = '#888';
+      return;
+    }
+
+    if (isIncompleteSpell(w)) {
+      flashMsg = 'Finish the word — ' + w + ' is incomplete';
+      flashT = 1.2;
+      spellEl.textContent = w + '…';
+      spellEl.style.color = '#c8a0ff';
+      return;
+    }
+
+    if (KNOWN_TYPOS[w]) {
+      const corrected = KNOWN_TYPOS[w];
+      if (corrected === 'HEAL' && allowedSpells.indexOf('HEAL') >= 0) {
+        castHeal(20);
+        glitchMsg = w + ' was close — weak mend (spell: HEAL)';
+        glitchT = 2.2;
+        spellEl.textContent = w + ' ~';
+        spellEl.style.color = '#6ae8a0';
+        screenShake = 0.06;
+        return;
+      }
+    }
+
+    let base = KNOWN_TYPOS[w] || null;
+    let nearDist = 99;
+    if (!base) {
+      const keys = allowedSpells.slice();
+      let i;
+      let best = null;
+      let bestD = 99;
+      for (i = 0; i < keys.length; i++) {
+        const d = levenshtein(w, keys[i]);
+        if (d < bestD && d <= 2 && Math.abs(w.length - keys[i].length) <= 1) {
+          bestD = d;
+          best = keys[i];
+        }
+      }
+      if (best && bestD >= 1) {
+        base = best;
+        nearDist = bestD;
+      }
+    }
+
+    if (base === 'HEAL' && allowedSpells.indexOf('HEAL') >= 0) {
+      castHeal(nearDist <= 1 ? 18 : 12);
+      glitchMsg = w + ' ≈ HEAL — fumbled mend';
+      glitchT = 2;
+      spellEl.textContent = w + ' ~';
+      spellEl.style.color = '#6ae8a0';
+      screenShake = 0.06;
+      return;
+    }
+
+    if (base && TYPO_GLITCH[base]) {
+      const list = TYPO_GLITCH[base];
+      const pick = list[Math.floor(Math.random() * list.length)];
+      pick.fn();
+      glitchMsg = pick.label + ' (' + w + ' ≠ ' + base + ')';
+      glitchT = 2.5;
+      spellEl.textContent = w + '?!';
+      spellEl.style.color = '#ff5080';
+      screenShake = 0.25;
+      return;
+    }
+
+    flashMsg = 'Fizzle — unknown word';
+    flashT = 1;
+    spellEl.textContent = w + '?';
+    spellEl.style.color = '#888';
+  }
+
+  function bufferStatus() {
+    const w = buffer.toUpperCase();
+    if (!w) return 'idle';
+    if (SPELLS[w] && allowedSpells.indexOf(w) >= 0) return 'exact';
+    let i;
+    if (w === 'MEND' && allowedSpells.indexOf('HEAL') >= 0) return 'exact';
+    for (i = 0; i < allowedSpells.length; i++) {
+      if (allowedSpells[i].indexOf(w) === 0) return 'prefix';
+    }
+    if (isIncompleteSpell(w)) return 'prefix';
+    if (KNOWN_TYPOS[w]) return 'typo';
+    for (i = 0; i < allowedSpells.length; i++) {
+      if (levenshtein(w, allowedSpells[i]) <= 2 && w.length >= 3) return 'near';
+    }
+    return 'unknown';
+  }
+
+  function tryCast() {
+    resolveSpell(buffer);
+    buffer = '';
+  }
+
+  function syncSpellsHud() {
+    const el = document.getElementById('spellsHud');
+    if (!el || !allowedSpells.length) return;
+    let html = 'Cast: ';
+    let i;
+    for (i = 0; i < allowedSpells.length; i++) {
+      const sp = allowedSpells[i];
+      const S = SPELLS[sp];
+      if (i > 0) html += ' · ';
+      html += '<strong style="color:' + S.color + '">' + sp + '</strong> <span style="opacity:0.85">(' + S.desc + ')</span>';
+    }
+    el.innerHTML = html;
+  }
+
+  function drawSpellStrip() {
+    const barTop = spellBarTop();
+    const buf = buffer.toUpperCase();
+    const n = allowedSpells.length;
+    if (!n) return;
+
+    ctx.font = '600 11px system-ui,sans-serif';
+    ctx.fillStyle = '#8a82a0';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Spells this floor — type the word, then Enter', W * 0.5, barTop + 14);
+
+    const chipH = 34;
+    const chipY = barTop + 22;
+    const gap = 8;
+    const chips = [];
+    let totalW = 0;
+    let i;
+    for (i = 0; i < n; i++) {
+      const sp = allowedSpells[i];
+      const S = SPELLS[sp];
+      ctx.font = 'bold 14px Consolas, monospace';
+      const labelW = ctx.measureText(sp).width;
+      ctx.font = '10px system-ui,sans-serif';
+      const descW = ctx.measureText(S.desc).width;
+      const w = Math.max(72, Math.max(labelW, descW) + 20);
+      chips.push({ sp: sp, S: S, w: w });
+      totalW += w + (i < n - 1 ? gap : 0);
+    }
+    let x = Math.max(12, (W - totalW) * 0.5);
+    for (i = 0; i < chips.length; i++) {
+      const c = chips[i];
+      const exact = buf === c.sp;
+      const prefix = buf.length > 0 && c.sp.indexOf(buf) === 0 && !exact;
+      const dim = buf.length > 0 && !exact && !prefix;
+      ctx.fillStyle = exact
+        ? 'rgba(106, 232, 160, 0.22)'
+        : prefix
+          ? 'rgba(200, 160, 255, 0.2)'
+          : dim
+            ? 'rgba(30, 24, 44, 0.75)'
+            : 'rgba(40, 32, 58, 0.95)';
+      ctx.strokeStyle = exact ? '#6ae8a0' : prefix ? '#c8a0ff' : c.S.color;
+      ctx.lineWidth = exact || prefix ? 2 : 1;
+      ctx.beginPath();
+      const r = 8;
+      ctx.moveTo(x + r, chipY);
+      ctx.lineTo(x + c.w - r, chipY);
+      ctx.quadraticCurveTo(x + c.w, chipY, x + c.w, chipY + r);
+      ctx.lineTo(x + c.w, chipY + chipH - r);
+      ctx.quadraticCurveTo(x + c.w, chipY + chipH, x + c.w - r, chipY + chipH);
+      ctx.lineTo(x + r, chipY + chipH);
+      ctx.quadraticCurveTo(x, chipY + chipH, x, chipY + chipH - r);
+      ctx.lineTo(x, chipY + r);
+      ctx.quadraticCurveTo(x, chipY, x + r, chipY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = c.S.color;
+      ctx.font = 'bold 14px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(c.sp, x + c.w * 0.5, chipY + 15);
+      ctx.font = '10px system-ui,sans-serif';
+      ctx.fillStyle = dim ? '#6a6480' : '#b0a8c8';
+      ctx.fillText(c.S.desc, x + c.w * 0.5, chipY + 28);
+      x += c.w + gap;
+    }
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawSpellPanel() {
+    const n = allowedSpells.length;
+    if (!n) return;
+    const panelW = 140;
+    const panelH = 16 + n * 19;
+    const px = W - TILE - panelW - 10;
+    const py = TILE + 10;
+    const buf = buffer.toUpperCase();
+    ctx.fillStyle = 'rgba(10, 6, 20, 0.88)';
+    ctx.strokeStyle = 'rgba(180, 140, 255, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(px, py, panelW, panelH);
+    ctx.strokeRect(px + 0.5, py + 0.5, panelW - 1, panelH - 1);
+    ctx.font = '600 10px system-ui,sans-serif';
+    ctx.fillStyle = '#8a82a0';
+    ctx.textAlign = 'left';
+    ctx.fillText('SPELLS', px + 10, py + 14);
+    let row;
+    for (row = 0; row < n; row++) {
+      const sp = allowedSpells[row];
+      const S = SPELLS[sp];
+      const ry = py + 22 + row * 19;
+      const exact = buf === sp;
+      const prefix = buf.length > 0 && sp.indexOf(buf) === 0 && !exact;
+      ctx.fillStyle = exact ? '#6ae8a0' : prefix ? '#c8a0ff' : S.color;
+      ctx.font = 'bold 13px Consolas, monospace';
+      ctx.fillText(sp, px + 10, ry);
+      ctx.font = '10px system-ui,sans-serif';
+      ctx.fillStyle = '#8a82a0';
+      ctx.fillText(S.name, px + 58, ry);
+    }
+  }
+
+  function arenaBounds(ent) {
+    const r = ent && ent.r != null ? ent.r : player.r;
+    return {
+      minX: TILE + r,
+      maxX: W - TILE - r,
+      minY: TILE + r,
+      maxY: spellBarTop() - r - 2,
+    };
+  }
+
+  function clampEntityToArena(ent) {
+    const b = arenaBounds(ent);
+    if (ent.x < b.minX) ent.x = b.minX;
+    if (ent.x > b.maxX) ent.x = b.maxX;
+    if (ent.y < b.minY) ent.y = b.minY;
+    if (ent.y > b.maxY) ent.y = b.maxY;
+  }
+
+  function collideWalls(x, y, r) {
+    let i;
+    for (i = 0; i < walls.length; i++) {
+      const w = walls[i];
+      const nx = Math.max(w.x, Math.min(x, w.x + w.w));
+      const ny = Math.max(w.y, Math.min(y, w.y + w.h));
+      if (Math.hypot(x - nx, y - ny) < r) return true;
+    }
+    return false;
+  }
+
+  function segmentHitsWall(x0, y0, x1, y1, r) {
+    const steps = Math.max(4, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 10));
+    let s;
+    for (s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const px = x0 + (x1 - x0) * t;
+      const py = y0 + (y1 - y0) * t;
+      if (collideWalls(px, py, r)) return true;
+    }
+    return false;
+  }
+
+  function resolveWallOverlap(ent, maxIter) {
+    maxIter = maxIter || 8;
+    let iter;
+    for (iter = 0; iter < maxIter; iter++) {
+      let moved = false;
+      let i;
+      for (i = 0; i < walls.length; i++) {
+        const w = walls[i];
+        const cx = Math.max(w.x, Math.min(ent.x, w.x + w.w));
+        const cy = Math.max(w.y, Math.min(ent.y, w.y + w.h));
+        let dx = ent.x - cx;
+        let dy = ent.y - cy;
+        let dist = Math.hypot(dx, dy);
+        if (dist < 0.001) {
+          const toL = ent.x - w.x;
+          const toR = w.x + w.w - ent.x;
+          const toT = ent.y - w.y;
+          const toB = w.y + w.h - ent.y;
+          const min = Math.min(toL, toR, toT, toB);
+          if (min === toL) {
+            dx = -1;
+            dy = 0;
+            dist = 1;
+          } else if (min === toR) {
+            dx = 1;
+            dy = 0;
+            dist = 1;
+          } else if (min === toT) {
+            dx = 0;
+            dy = -1;
+            dist = 1;
+          } else {
+            dx = 0;
+            dy = 1;
+            dist = 1;
+          }
+        }
+        if (dist < ent.r) {
+          const push = ent.r - dist + 0.5;
+          ent.x += (dx / dist) * push;
+          ent.y += (dy / dist) * push;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    clampEntityToArena(ent);
+    if (collideWalls(ent.x, ent.y, ent.r)) resolveWallOverlap(ent, 4);
+  }
+
+  function moveWithWalls(ent, dx, dy) {
+    const ox = ent.x;
+    const oy = ent.y;
+    if (!collideWalls(ent.x + dx, ent.y, ent.r)) ent.x += dx;
+    if (!collideWalls(ent.x, ent.y + dy, ent.r)) ent.y += dy;
+    if (collideWalls(ent.x, ent.y, ent.r)) {
+      ent.x = ox;
+      ent.y = oy;
+      if (!collideWalls(ent.x + dx, ent.y + dy, ent.r)) {
+        ent.x += dx;
+        ent.y += dy;
+      } else if (!collideWalls(ent.x + dx, ent.y, ent.r)) {
+        ent.x += dx;
+      } else if (!collideWalls(ent.x, ent.y + dy, ent.r)) {
+        ent.y += dy;
+      }
+    }
+    if (collideWalls(ent.x, ent.y, ent.r)) resolveWallOverlap(ent);
+    clampEntityToArena(ent);
+  }
+
+  function isIncompleteSpell(w) {
+    let i;
+    for (i = 0; i < allowedSpells.length; i++) {
+      const sp = allowedSpells[i];
+      if (sp.indexOf(w) === 0 && sp !== w) return true;
+    }
+    return false;
+  }
+
+  function update(dt) {
+    if (!playing) return;
+
+    if (player.shieldT > 0) {
+      player.shieldT -= dt;
+      if (player.shieldT <= 0) player.shield = Math.max(0, player.shield - 20);
+    }
+    if (player.inv > 0) player.inv -= dt;
+    if (playerFrozenT > 0) playerFrozenT -= dt;
+    if (inventoryFireT > 0) {
+      inventoryFireT -= dt;
+      if (Math.random() < dt * 2) damagePlayer(4, 'fire');
+      if (inventoryFireT <= 0) {
+        let i;
+        for (i = 0; i < inventory.length; i++) inventory[i].ok = true;
+      }
+    }
+    if (flashT > 0) flashT -= dt;
+    if (glitchT > 0) glitchT -= dt;
+    if (screenShake > 0) screenShake -= dt;
+    if (healFloatT > 0) healFloatT -= dt;
+
+    let spd = 160;
+    if (playerFrozenT > 0) spd = 0;
+    else if (slipT > 0) {
+      slipT -= dt;
+      spd = 220;
+    }
+    let dx = 0;
+    let dy = 0;
+    if (keys['ArrowLeft']) dx -= 1;
+    if (keys['ArrowRight']) dx += 1;
+    if (keys['ArrowUp']) dy -= 1;
+    if (keys['ArrowDown']) dy += 1;
+    if (dx || dy) {
+      const len = Math.hypot(dx, dy) || 1;
+      moveWithWalls(player, (dx / len) * spd * dt, (dy / len) * spd * dt);
+    }
+    clampEntityToArena(player);
+    if (collideWalls(player.x, player.y, player.r)) resolveWallOverlap(player);
+
+    let i;
+    for (i = mudPuddles.length - 1; i >= 0; i--) {
+      const m = mudPuddles[i];
+      m.life -= dt;
+      if (Math.hypot(player.x - m.x, player.y - m.y) < m.r) damagePlayer(m.dmg * dt, 'mud');
+      if (m.life <= 0) mudPuddles.splice(i, 1);
+    }
+
+    for (i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      if (e.slowT > 0) e.slowT -= dt;
+      const espd = e.spd * (e.slowT > 0 ? 0.35 : 1);
+      const ex = e.x - player.x;
+      const ey = e.y - player.y;
+      const dist = Math.hypot(ex, ey) || 1;
+      moveWithWalls(e, -(ex / dist) * espd * dt, -(ey / dist) * espd * dt);
+      clampEntityToArena(e);
+      e.hitCd = (e.hitCd || 0) - dt;
+      if (dist < e.r + player.r + 6 && e.hitCd <= 0) {
+        damagePlayer(e.dmg, 'melee');
+        e.hitCd = 0.55;
+      }
+    }
+
+    for (i = projectiles.length - 1; i >= 0; i--) {
+      const p = projectiles[i];
+      if (p.grace > 0) p.grace -= dt;
+      if (p.wallGrace > 0) p.wallGrace -= dt;
+      const prevX = p.x;
+      const prevY = p.y;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      const wr = p.wallR != null ? p.wallR : p.r * 0.45;
+      if (p.life <= 0) {
+        projectiles.splice(i, 1);
+        continue;
+      }
+      if (p.wallGrace <= 0 && segmentHitsWall(prevX, prevY, p.x, p.y, wr)) {
+        projectiles.splice(i, 1);
+        continue;
+      }
+      let j;
+      for (j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        if (Math.hypot(p.x - e.x, p.y - e.y) >= p.r + e.r) continue;
+        if (p.kind === 'bolt' && p.hitIds && p.hitIds[e.uid]) continue;
+        damageEnemy(e, p.dmg, p.kind === 'fire' ? '#ff6a40' : '#ffe86a');
+        if (p.kind === 'bolt' && p.hitIds) p.hitIds[e.uid] = true;
+        else {
+          projectiles.splice(i, 1);
+          break;
+        }
+      }
+      if (i >= projectiles.length) continue;
+      p = projectiles[i];
+      if (
+        p.kind === 'bolt' &&
+        p.grace <= 0 &&
+        Math.hypot(p.x - player.x, p.y - player.y) < p.r + player.r
+      ) {
+        damagePlayer(p.dmg, 'bolt');
+        projectiles.splice(i, 1);
+        continue;
+      }
+    }
+    purgeDeadEnemies();
+
+    for (i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx * dt;
+      pt.y += pt.vy * dt;
+      pt.life -= dt;
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+
+    if (enemies.length === 0) {
+      if (roomIndex < roomPlan.length - 1) loadRoom(roomIndex + 1);
+      else setWin();
+    }
+  }
+
+  function draw() {
+    ctx.save();
+    if (screenShake > 0) {
+      ctx.translate((Math.random() - 0.5) * 8 * screenShake, (Math.random() - 0.5) * 8 * screenShake);
+    }
+
+    ctx.fillStyle = '#100c1a';
+    ctx.fillRect(0, 0, W, H);
+
+    let i;
+    for (i = 0; i < walls.length; i++) {
+      const w = walls[i];
+      const g = ctx.createLinearGradient(w.x, w.y, w.x, w.y + w.h);
+      g.addColorStop(0, '#2a2040');
+      g.addColorStop(1, '#1a1028');
+      ctx.fillStyle = g;
+      ctx.fillRect(w.x, w.y, w.w, w.h);
+      ctx.strokeStyle = 'rgba(200, 160, 255, 0.2)';
+      ctx.strokeRect(w.x + 0.5, w.y + 0.5, w.w - 1, w.h - 1);
+    }
+
+    if (playing) drawSpellPanel();
+
+    for (i = 0; i < mudPuddles.length; i++) {
+      const m = mudPuddles[i];
+      ctx.fillStyle = 'rgba(120, 60, 30, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(m.x, m.y, m.r, m.r * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255, 120, 60, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(m.x, m.y, m.r * 0.6, m.r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      ctx.fillStyle = e.col;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (e.slowT > 0) {
+        ctx.strokeStyle = 'rgba(106, 216, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      const bw = e.r * 2;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(e.x - bw / 2, e.y - e.r - 10, bw, 4);
+      ctx.fillStyle = '#ff6a50';
+      ctx.fillRect(e.x - bw / 2, e.y - e.r - 10, bw * (e.hp / e.maxHp), 4);
+    }
+
+    for (i = 0; i < projectiles.length; i++) {
+      const p = projectiles[i];
+      if (p.kind === 'bolt') {
+        ctx.strokeStyle = 'rgba(255, 248, 200, 0.85)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 0.05, p.y - p.vy * 0.05);
+        ctx.stroke();
+        ctx.fillStyle = '#fff8c0';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r + 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#ff6a40';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    if (player.shield > 0) {
+      ctx.strokeStyle = 'rgba(200, 160, 255, ' + (0.3 + player.shield / 80) + ')';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.r + 10 + player.shield * 0.08, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#c8a0ff';
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f0ecff';
+    ctx.beginPath();
+    ctx.arc(player.x - 4, player.y - 3, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (healFloatT > 0 && healFloatAmt > 0) {
+      const hf = Math.min(1, healFloatT / 1.5);
+      ctx.font = 'bold 24px system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(106, 232, 160, ' + hf + ')';
+      ctx.fillText('+' + healFloatAmt + ' HP', player.x, player.y - player.r - 14 - (1 - hf) * 28);
+    }
+
+    for (i = 0; i < particles.length; i++) {
+      const pt = particles[i];
+      ctx.globalAlpha = Math.min(1, pt.life * 3);
+      ctx.fillStyle = pt.col;
+      ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = 'rgba(20, 12, 32, 0.94)';
+    const uiTop = spellBarTop();
+    ctx.fillRect(0, uiTop, W, H - uiTop);
+    ctx.strokeStyle = 'rgba(180, 140, 255, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, uiTop);
+    ctx.lineTo(W, uiTop);
+    ctx.stroke();
+
+    drawSpellStrip();
+
+    const status = bufferStatus();
+    let bufCol = '#888';
+    if (status === 'exact') bufCol = '#6ae8a0';
+    else if (status === 'prefix') bufCol = '#c8a0ff';
+    else if (status === 'near' || status === 'unknown') bufCol = '#ff5080';
+
+    const display = buffer.toUpperCase() || '…type spell…';
+    const cx = W * 0.5;
+    const spellY = H - 28;
+    ctx.font = 'bold 34px Consolas, "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(display).width;
+    const pillPadX = 22;
+    const pillPadY = 12;
+    ctx.fillStyle = 'rgba(12, 8, 24, 0.88)';
+    ctx.strokeStyle = 'rgba(180, 140, 255, 0.45)';
+    ctx.lineWidth = 2;
+    const pillW = Math.max(200, tw + pillPadX * 2);
+    const pillH = 44 + pillPadY;
+    const pillX = cx - pillW * 0.5;
+    const pillY = spellY - pillH * 0.5;
+    ctx.beginPath();
+    const pr = 12;
+    ctx.moveTo(pillX + pr, pillY);
+    ctx.lineTo(pillX + pillW - pr, pillY);
+    ctx.quadraticCurveTo(pillX + pillW, pillY, pillX + pillW, pillY + pr);
+    ctx.lineTo(pillX + pillW, pillY + pillH - pr);
+    ctx.quadraticCurveTo(pillX + pillW, pillY + pillH, pillX + pillW - pr, pillY + pillH);
+    ctx.lineTo(pillX + pr, pillY + pillH);
+    ctx.quadraticCurveTo(pillX, pillY + pillH, pillX, pillY + pillH - pr);
+    ctx.lineTo(pillX, pillY + pr);
+    ctx.quadraticCurveTo(pillX, pillY, pillX + pr, pillY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = bufCol;
+    ctx.fillText(display, cx, spellY);
+    ctx.font = '13px system-ui,sans-serif';
+    ctx.fillStyle = '#9a92b8';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Enter = cast · Backspace = erase · Esc = clear', cx, H - 10);
+
+    if (flashT > 0 && flashMsg) {
+      ctx.font = 'bold 20px system-ui,sans-serif';
+      ctx.fillStyle = 'rgba(240, 236, 255, ' + Math.min(1, flashT) + ')';
+      ctx.textAlign = 'center';
+      ctx.fillText(flashMsg, W * 0.5, 40);
+    }
+    if (glitchT > 0 && glitchMsg) {
+      ctx.font = 'bold 18px Consolas, monospace';
+      ctx.fillStyle = '#ff5080';
+      ctx.textAlign = 'center';
+      const jitter = (Math.random() - 0.5) * 4;
+      ctx.fillText(glitchMsg, W * 0.5 + jitter, 68 + jitter);
+      ctx.strokeStyle = '#5ae8c8';
+      ctx.lineWidth = 1;
+      ctx.strokeText(glitchMsg, W * 0.5 - jitter, 68 - jitter);
+    }
+
+    if (playerFrozenT > 0) {
+      ctx.fillStyle = 'rgba(106, 216, 255, 0.25)';
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    ctx.restore();
+  }
+
+  function tick(now) {
+    rafId = requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    if (playing) update(dt);
+    draw();
+  }
+
+  syncProgressHint();
+  rebuildLevelGrid();
+
+  window.addEventListener('keydown', function (ev) {
+    keys[ev.key] = true;
+    if (!playing || needsFocus) return;
+
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      tryCast();
+      return;
+    }
+    if (ev.key === 'Backspace') {
+      ev.preventDefault();
+      buffer = buffer.slice(0, -1);
+      return;
+    }
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+      buffer = '';
+      return;
+    }
+    if (
+      ev.key === 'ArrowLeft' ||
+      ev.key === 'ArrowRight' ||
+      ev.key === 'ArrowUp' ||
+      ev.key === 'ArrowDown'
+    ) {
+      ev.preventDefault();
+      return;
+    }
+    if (ev.key.length === 1 && /[a-zA-Z]/.test(ev.key)) {
+      if (buffer.length < 12) buffer += ev.key.toUpperCase();
+      ev.preventDefault();
+    }
+  });
+
+  window.addEventListener('keyup', function (ev) {
+    keys[ev.key] = false;
+  });
+
+  function dismissTap() {
+    if (!needsFocus) return;
+    needsFocus = false;
+    if (tapOverlay) tapOverlay.classList.add('hidden');
+    canvas.focus({ preventScroll: true });
+  }
+
+  if (tapOverlay) {
+    tapOverlay.addEventListener('click', dismissTap);
+    tapOverlay.addEventListener('keydown', function (ev) {
+      if (ev.code === 'Enter' || ev.code === 'Space') {
+        ev.preventDefault();
+        dismissTap();
+      }
+    });
+  }
+
+  if (btnPlay) {
+    btnPlay.addEventListener('click', function () {
+      if (endlessActive()) startEndlessAt(1);
+      else startPlayAt(Math.min(progress, FLOORS.length - 1));
+    });
+  }
+  if (btnLevels) btnLevels.addEventListener('click', showLevelSelect);
+  if (btnBackHub) btnBackHub.addEventListener('click', hideLevelSelect);
+  if (btnRetry) {
+    btnRetry.addEventListener('click', function () {
+      hideOverlays();
+      if (endlessActive()) loadRandomEndlessFloor(endlessGeneration || 1);
+      else loadFloor(floorIndex);
+      playing = true;
+      needsFocus = false;
+      if (tapOverlay) tapOverlay.classList.add('hidden');
+      lastT = performance.now();
+    });
+  }
+  if (btnLoseMenu) btnLoseMenu.addEventListener('click', returnToHub);
+  if (btnNext) {
+    btnNext.addEventListener('click', function () {
+      hideOverlays();
+      if (floorIndex < FLOORS.length - 1) startPlayAt(floorIndex + 1);
+      else returnToHub();
+    });
+  }
+  if (btnWinMenu) btnWinMenu.addEventListener('click', returnToHub);
+  if (btnDoneMenu) btnDoneMenu.addEventListener('click', returnToHub);
+
+  lastT = performance.now();
+  rafId = requestAnimationFrame(tick);
+  if (window.ArthurModes) {
+    ArthurModes.boot({
+      hudEl: document.getElementById('hud'),
+      onPlay: function () {
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+      onTutorial: function () {
+        ArthurModes.showTutorial(ArthurModes.gameId(), function () {
+          var b = document.getElementById('btnPlay');
+          if (b) b.click();
+        });
+      },
+      onEndless: function () {
+        window.__arthurEndless = true;
+        ArthurModes.markEndlessSession();
+        startEndlessAt(1);
+      },
+      onTutorialStart: function () {
+        var b = document.getElementById('btnPlay');
+        if (b) b.click();
+      },
+    });
+  }
+
+})();
+  </script>
+<script src="arthur-i18n.js"></script>
+</body>
+</html>
